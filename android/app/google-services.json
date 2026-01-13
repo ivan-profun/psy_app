@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "560623009136",
+    "project_id": "psychology-app-dd5e9",
+    "storage_bucket": "psychology-app-dd5e9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:560623009136:android:36138a2831d999b851e3b5",
+        "android_client_info": {
+          "package_name": "com.example.flutter_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCw2d_HCbcuzOqVvyNy_rAktrPgx1isrwg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:560623009136:android:4d7ebaebb3e8747651e3b5",
+        "android_client_info": {
+          "package_name": "com.example.psy_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCw2d_HCbcuzOqVvyNy_rAktrPgx1isrwg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
