@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/services/firebase_service.dart';
+import '../../../core/l10n/app_localizations.dart';
 import '../../../data/models/user_model.dart';
 import '../articles/article_create_edit_screen.dart';
+import '../../widgets/avatar_picker.dart';
 
 class ProfilePsychologistScreen extends StatefulWidget {
   const ProfilePsychologistScreen({super.key});
@@ -56,18 +58,45 @@ class _ProfilePsychologistScreenState extends State<ProfilePsychologistScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Информация о психологе',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Row(
+                          children: [
+                            AvatarPicker(
+                              currentAvatarUrl: userData?.avatarUrl,
+                              size: 80,
+                              canEdit: true,
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    userData?.name ?? 'Не указано',
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    user?.email ?? 'Не указан',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 16),
-                        _buildInfoRow('Имя:', userData?.name ?? 'Не указано'),
-                        _buildInfoRow('Email:', user?.email ?? 'Не указан'),
-                        _buildInfoRow('Роль:', 'Психолог'),
-                        // УБРАЛИ ID
+                        const Divider(),
+                        const SizedBox(height: 8),
+                        _buildInfoRow(
+                          '${(AppLocalizations.of(context) ?? AppLocalizations(const Locale('ru'))).translate('role') ?? 'Роль'}:',
+                          AppLocalizations.of(context)?.translate('psychologist') ?? 'Психолог',
+                        ),
                       ],
                     ),
                   ),
@@ -82,9 +111,9 @@ class _ProfilePsychologistScreenState extends State<ProfilePsychologistScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Статистика статей',
-                          style: TextStyle(
+                        Text(
+                          AppLocalizations.of(context)?.translate('articles_statistics') ?? 'Статистика статей',
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
@@ -96,19 +125,19 @@ class _ProfilePsychologistScreenState extends State<ProfilePsychologistScreen> {
                           children: [
                             _buildStatCard(
                               icon: Icons.article,
-                              title: 'Всего статей',
+                              title: AppLocalizations.of(context)?.translate('total_articles') ?? 'Всего статей',
                               value: _articlesCount['total'].toString(),
                               color: Colors.blue,
                             ),
                             _buildStatCard(
                               icon: Icons.public,
-                              title: 'Опубликовано',
+                              title: AppLocalizations.of(context)?.translate('published_articles') ?? 'Опубликовано',
                               value: _articlesCount['published'].toString(),
                               color: Colors.green,
                             ),
                             _buildStatCard(
                               icon: Icons.drafts,
-                              title: 'Черновики',
+                              title: AppLocalizations.of(context)?.translate('draft_articles') ?? 'Черновики',
                               value: _articlesCount['draft'].toString(),
                               color: Colors.orange,
                             ),
@@ -128,9 +157,9 @@ class _ProfilePsychologistScreenState extends State<ProfilePsychologistScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Статистика сессий',
-                          style: TextStyle(
+                        Text(
+                          AppLocalizations.of(context)?.translate('sessions_statistics') ?? 'Статистика сессий',
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
@@ -142,19 +171,19 @@ class _ProfilePsychologistScreenState extends State<ProfilePsychologistScreen> {
                           children: [
                             _buildStatCard(
                               icon: Icons.event,
-                              title: 'Всего сессий',
+                              title: AppLocalizations.of(context)?.translate('total_sessions') ?? 'Всего сессий',
                               value: _sessionsCount['total'].toString(),
                               color: Colors.purple,
                             ),
                             _buildStatCard(
                               icon: Icons.event_available,
-                              title: 'Предстоящие',
+                              title: AppLocalizations.of(context)?.translate('upcoming_sessions') ?? 'Предстоящие',
                               value: _sessionsCount['upcoming'].toString(),
                               color: Colors.blue,
                             ),
                             _buildStatCard(
                               icon: Icons.check_circle,
-                              title: 'Завершённые',
+                              title: AppLocalizations.of(context)?.translate('completed_sessions_count') ?? 'Завершённые',
                               value: _sessionsCount['completed'].toString(),
                               color: Colors.green,
                             ),
@@ -173,7 +202,7 @@ class _ProfilePsychologistScreenState extends State<ProfilePsychologistScreen> {
                     children: [
                       ListTile(
                         leading: Icon(Icons.add_circle, color: Theme.of(context).primaryColor),
-                        title: const Text('Написать статью'),
+                        title: Text(AppLocalizations.of(context)?.translate('create_article') ?? 'Написать статью'),
                         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                         onTap: () {
                           Navigator.push(
@@ -186,16 +215,15 @@ class _ProfilePsychologistScreenState extends State<ProfilePsychologistScreen> {
                       ),
                       ListTile(
                         leading: Icon(Icons.schedule, color: Theme.of(context).primaryColor),
-                        title: const Text('Управление расписанием'),
+                        title: Text(AppLocalizations.of(context)?.translate('schedule_management') ?? 'Управление расписанием'),
                         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                         onTap: () {
-                          // Уже на странице расписания, можно показать диалог
                           _showScheduleInfoDialog(context);
                         },
                       ),
                       ListTile(
                         leading: Icon(Icons.people, color: Theme.of(context).primaryColor),
-                        title: const Text('Мои клиенты'),
+                        title: Text(AppLocalizations.of(context)?.translate('my_clients') ?? 'Мои клиенты'),
                         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                         onTap: () {
                           _showClientsDialog(context);
@@ -204,11 +232,64 @@ class _ProfilePsychologistScreenState extends State<ProfilePsychologistScreen> {
                     ],
                   ),
                 ),
+                
+                const SizedBox(height: 16),
+                
+                // Выход
+                Card(
+                  child: ListTile(
+                    leading: Icon(Icons.logout, color: Colors.red),
+                    title: Text(
+                      AppLocalizations.of(context)?.translate('logout') ?? 'Выход',
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () => _showLogoutDialog(context),
+                  ),
+                ),
               ],
             ),
           ),
         );
       },
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    final localizations = AppLocalizations.of(context) ?? AppLocalizations(const Locale('ru'));
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            const Icon(Icons.logout, color: Colors.red),
+            const SizedBox(width: 8),
+            Text(localizations.translate('logout_title')),
+          ],
+        ),
+        content: Text(localizations.translate('logout_confirm')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(localizations.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await context.read<FirebaseService>().signOut();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(localizations.translate('logout')),
+          ),
+        ],
+      ),
     );
   }
 

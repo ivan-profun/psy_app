@@ -3,8 +3,14 @@ import 'package:provider/provider.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/l10n/app_localizations.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
@@ -71,9 +77,9 @@ class SettingsScreen extends StatelessWidget {
                   secondary: Icon(Icons.notifications_active, color: theme.colorScheme.primary),
                   title: Text(localizations.translate('push_notifications')),
                   subtitle: Text(localizations.translate('receive_notifications')),
-                  value: true,
+                  value: settings.pushNotifications,
                   onChanged: (value) {
-                    // TODO: Реализовать управление уведомлениями
+                    settings.setPushNotifications(value);
                   },
                 ),
                 const Divider(height: 1),
@@ -81,9 +87,9 @@ class SettingsScreen extends StatelessWidget {
                   secondary: Icon(Icons.email, color: theme.colorScheme.primary),
                   title: Text(localizations.translate('email_notifications')),
                   subtitle: Text(localizations.translate('receive_email_notifications')),
-                  value: false,
+                  value: settings.emailNotifications,
                   onChanged: (value) {
-                    // TODO: Реализовать управление email-уведомлениями
+                    settings.setEmailNotifications(value);
                   },
                 ),
               ],
@@ -357,32 +363,183 @@ class SettingsScreen extends StatelessWidget {
             Text(localizations.translate('select_language')),
           ],
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            RadioListTile<String>(
-              title: Text(localizations.russian),
-              value: 'ru',
-              groupValue: settings.language,
-              onChanged: (value) {
-                if (value != null) {
-                  settings.setLanguage(value);
-                  Navigator.pop(context);
-                }
-              },
-            ),
-            RadioListTile<String>(
-              title: Text(localizations.english),
-              value: 'en',
-              groupValue: settings.language,
-              onChanged: (value) {
-                if (value != null) {
-                  settings.setLanguage(value);
-                  Navigator.pop(context);
-                }
-              },
-            ),
-          ],
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<String>(
+                title: const Text('Русский'),
+                value: 'ru',
+                groupValue: settings.language,
+                onChanged: (value) async {
+                  if (value != null && value != settings.language) {
+                    Navigator.pop(context);
+                    await settings.setLanguage(value);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(localizations.translate('language_changed') ?? 'Язык изменён'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  }
+                },
+              ),
+              RadioListTile<String>(
+                title: const Text('English'),
+                value: 'en',
+                groupValue: settings.language,
+                onChanged: (value) async {
+                  if (value != null && value != settings.language) {
+                    Navigator.pop(context);
+                    await settings.setLanguage(value);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(localizations.translate('language_changed') ?? 'Language changed'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  }
+                },
+              ),
+              RadioListTile<String>(
+                title: const Text('O\'zbek'),
+                value: 'uz',
+                groupValue: settings.language,
+                onChanged: (value) async {
+                  if (value != null && value != settings.language) {
+                    Navigator.pop(context);
+                    await settings.setLanguage(value);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(localizations.translate('language_changed') ?? 'Язык изменён'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  }
+                },
+              ),
+              RadioListTile<String>(
+                title: const Text('Тоҷикӣ'),
+                value: 'tg',
+                groupValue: settings.language,
+                onChanged: (value) async {
+                  if (value != null && value != settings.language) {
+                    Navigator.pop(context);
+                    await settings.setLanguage(value);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(localizations.translate('language_changed') ?? 'Язык изменён'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  }
+                },
+              ),
+              RadioListTile<String>(
+                title: const Text('Quenya (Elvish)'),
+                value: 'el',
+                groupValue: settings.language,
+                onChanged: (value) async {
+                  if (value != null && value != settings.language) {
+                    Navigator.pop(context);
+                    await settings.setLanguage(value);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(localizations.translate('language_changed') ?? 'Язык изменён'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  }
+                },
+              ),
+              RadioListTile<String>(
+                title: const Text('Ирон (Ossetian)'),
+                value: 'os',
+                groupValue: settings.language,
+                onChanged: (value) async {
+                  if (value != null && value != settings.language) {
+                    Navigator.pop(context);
+                    await settings.setLanguage(value);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(localizations.translate('language_changed') ?? 'Язык изменён'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  }
+                },
+              ),
+              RadioListTile<String>(
+                title: const Text('Українська'),
+                value: 'uk',
+                groupValue: settings.language,
+                onChanged: (value) async {
+                  if (value != null && value != settings.language) {
+                    Navigator.pop(context);
+                    await settings.setLanguage(value);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(localizations.translate('language_changed') ?? 'Язык изменён'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  }
+                },
+              ),
+              RadioListTile<String>(
+                title: const Text('Саха (Yakut)'),
+                value: 'sah',
+                groupValue: settings.language,
+                onChanged: (value) async {
+                  if (value != null && value != settings.language) {
+                    Navigator.pop(context);
+                    await settings.setLanguage(value);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(localizations.translate('language_changed') ?? 'Язык изменён'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  }
+                },
+              ),
+              RadioListTile<String>(
+                title: const Text('Словѣньскъ (Old Church Slavonic)'),
+                value: 'cu',
+                groupValue: settings.language,
+                onChanged: (value) async {
+                  if (value != null && value != settings.language) {
+                    Navigator.pop(context);
+                    await settings.setLanguage(value);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(localizations.translate('language_changed') ?? 'Язык изменён'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  }
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

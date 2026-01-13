@@ -158,17 +158,30 @@ class FirebaseService {
     await _auth.signOut();
   }
 
+  // Обновить аватарку пользователя
+  Future<void> updateUserAvatar(String base64Avatar) async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) throw Exception('Пользователь не авторизован');
+
+    await _firestore.collection('users').doc(userId).update({
+      'avatarUrl': base64Avatar,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  // Получить аватарку пользователя
+  Future<String?> getUserAvatar(String userId) async {
+    final doc = await _firestore.collection('users').doc(userId).get();
+    if (!doc.exists) return null;
+    return doc.data()?['avatarUrl'] as String?;
+  }
+
   Stream<List<ScheduleSlot>> getAvailableSlotsStream({int limit = 10}) {
     try {
       // Пробуем получить все слоты и фильтровать на клиенте из-за возможных проблем с правами
       return _firestore
           .collection('schedule')
           .snapshots()
-          .handleError((error) {
-            print('Ошибка при получении слотов: $error');
-            // Возвращаем пустой список вместо throw, чтобы не ломать UI
-            return <ScheduleSlot>[];
-          })
           .map((snapshot) {
             try {
               final now = DateTime.now();
@@ -176,8 +189,8 @@ class FirebaseService {
                   .map((doc) {
                     try {
                       final data = doc.data();
-                      // Проверяем наличие необходимых полей
-                      if (data['dateTime'] == null) {
+                      // Проверяем наличие необходимых полей (datetime или dateTime)
+                      if (data['datetime'] == null && data['dateTime'] == null) {
                         return null;
                       }
                       return ScheduleSlot.fromFirestore(data, doc.id);
@@ -197,6 +210,11 @@ class FirebaseService {
               print('Ошибка обработки слотов: $e');
               return <ScheduleSlot>[];
             }
+          })
+          .handleError((error) {
+            print('Ошибка при получении слотов: $error');
+            // Возвращаем пустой список при ошибке
+            return <ScheduleSlot>[];
           });
     } catch (e) {
       print('Ошибка инициализации потока слотов: $e');
@@ -219,7 +237,7 @@ class FirebaseService {
     await _firestore.collection('appointments').add({
       'studentId': userId,
       'psychologistId': slot.psychologistId,
-      'dateTime': slot.datetime,
+      'datetime': slot.datetime,
       'status': 'booked',
       'createdAt': FieldValue.serverTimestamp(),
     });
@@ -279,7 +297,7 @@ class FirebaseService {
     final upcomingSnapshot = await _firestore
         .collection('appointments')
         .where('psychologistId', isEqualTo: psychologistId)
-        .where('dateTime', isGreaterThanOrEqualTo: DateTime.now())
+        .where('datetime', isGreaterThanOrEqualTo: DateTime.now())
         .get();
     
     final completedSnapshot = await _firestore

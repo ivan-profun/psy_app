@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/services/firebase_service.dart';
+import '../../../core/l10n/app_localizations.dart';
 import '../../../data/models/user_model.dart';
 import '../settings/settings_screen.dart';
+import '../../widgets/avatar_picker.dart';
 
 class ProfileStudentScreen extends StatefulWidget {
   const ProfileStudentScreen({super.key});
@@ -50,18 +52,45 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Личная информация',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Row(
+                          children: [
+                            AvatarPicker(
+                              currentAvatarUrl: userData?.avatarUrl,
+                              size: 80,
+                              canEdit: true,
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    userData?.name ?? 'Не указано',
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    user?.email ?? 'Не указан',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 16),
-                        _buildInfoRow('Имя:', userData?.name ?? 'Не указано'),
-                        _buildInfoRow('Email:', user?.email ?? 'Не указан'),
-                        _buildInfoRow('Роль:', 'Студент'),
-                        // УБРАЛИ ID: _buildInfoRow('ID:', user?.uid.substring(0, 8) ?? ''),
+                        const Divider(),
+                        const SizedBox(height: 8),
+                        _buildInfoRow(
+                          '${(AppLocalizations.of(context) ?? AppLocalizations(const Locale('ru'))).translate('role') ?? 'Роль'}:',
+                          AppLocalizations.of(context)?.translate('student') ?? 'Студент',
+                        ),
                       ],
                     ),
                   ),
@@ -76,9 +105,9 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Статистика',
-                          style: TextStyle(
+                        Text(
+                          AppLocalizations.of(context)?.translate('statistics') ?? 'Статистика',
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
@@ -86,7 +115,7 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
                         const SizedBox(height: 16),
                         _buildStatCard(
                           icon: Icons.event_available,
-                          title: 'Посещенных сессий',
+                          title: AppLocalizations.of(context)?.translate('completed_sessions') ?? 'Посещенных сессий',
                           value: _completedSessions.toString(),
                           color: Colors.green,
                         ),
@@ -101,7 +130,7 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
                 Card(
                   child: ListTile(
                     leading: Icon(Icons.settings, color: Theme.of(context).primaryColor),
-                    title: const Text('Настройки приложения'),
+                    title: Text(AppLocalizations.of(context)?.translate('app_settings') ?? 'Настройки приложения'),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                     onTap: () {
                       Navigator.push(
@@ -111,6 +140,21 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
                         ),
                       );
                     },
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Выход
+                Card(
+                  child: ListTile(
+                    leading: Icon(Icons.logout, color: Colors.red),
+                    title: Text(
+                      AppLocalizations.of(context)?.translate('logout') ?? 'Выход',
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () => _showLogoutDialog(context),
                   ),
                 ),
               ],
@@ -176,6 +220,44 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    final localizations = AppLocalizations.of(context) ?? AppLocalizations(const Locale('ru'));
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            const Icon(Icons.logout, color: Colors.red),
+            const SizedBox(width: 8),
+            Text(localizations.translate('logout_title')),
+          ],
+        ),
+        content: Text(localizations.translate('logout_confirm')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(localizations.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await context.read<FirebaseService>().signOut();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(localizations.translate('logout')),
           ),
         ],
       ),

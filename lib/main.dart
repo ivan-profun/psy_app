@@ -6,6 +6,7 @@ import 'firebase_options.dart';
 import 'core/services/firebase_service.dart';
 import 'core/providers/settings_provider.dart';
 import 'core/l10n/app_localizations.dart';
+import 'core/navigation/navigator_key.dart';
 import 'presentation/screens/auth/auth_wrapper.dart';
 import 'presentation/theme/app_theme.dart';
 
@@ -41,6 +42,7 @@ class MyApp extends StatelessWidget {
       child: Consumer<SettingsProvider>(
         builder: (context, settings, _) {
           return MaterialApp(
+            navigatorKey: navigatorKey,
             title: 'Психологическая помощь',
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
@@ -55,13 +57,24 @@ class MyApp extends StatelessWidget {
             supportedLocales: const [
               Locale('ru', 'RU'),
               Locale('en', 'US'),
+              Locale('uz', 'UZ'),
+              Locale('tg', 'TJ'),
+              Locale('el'),
+              Locale('os'),
+              Locale('uk', 'UA'),
+              Locale('sah'),
+              Locale('cu'),
             ],
             builder: (context, child) {
               return MediaQuery(
                 data: MediaQuery.of(context).copyWith(
                   textScaleFactor: settings.textScaleFactor,
                 ),
-                child: child!,
+                child: Localizations.override(
+                  context: context,
+                  locale: Locale(settings.language),
+                  child: child!,
+                ),
               );
             },
             home: const AuthWrapper(),

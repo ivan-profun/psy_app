@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/services/firebase_service.dart';
+import '../../../core/l10n/app_localizations.dart';
 import './profile_student_screen.dart';
 import './profile_psychologist_screen.dart';
+import './profile_admin_screen.dart';
 import '../settings/settings_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -11,11 +13,12 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<FirebaseService>().currentUser;
-    final isPsychologist = user != null && user.email?.contains('psych') == true;
-
+    final firebaseService = context.watch<FirebaseService>();
+    final localizations = AppLocalizations.of(context) ?? AppLocalizations(const Locale('ru'));
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Профиль'),
+        title: Text(localizations.profile),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
@@ -30,9 +33,22 @@ class ProfileScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: isPsychologist 
-          ? const ProfilePsychologistScreen()
-          : const ProfileStudentScreen(),
+      body: FutureBuilder<String>(
+        future: firebaseService.getUserRole(),
+        builder: (context, snapshot) {
+          final role = snapshot.data ?? 'student';
+          final isPsychologist = role == 'psychologist';
+          final isAdmin = role == 'admin';
+          
+          if (isAdmin) {
+            return const ProfileAdminScreen();
+          } else if (isPsychologist) {
+            return const ProfilePsychologistScreen();
+          } else {
+            return const ProfileStudentScreen();
+          }
+        },
+      ),
     );
   }
 }

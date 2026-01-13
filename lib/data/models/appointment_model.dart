@@ -24,10 +24,12 @@ class AppointmentModel {
       id: id,
       studentId: data['studentId'] ?? '',
       psychologistId: data['psychologistId'] ?? '',
-      datetime: (data['datetime'] as Timestamp).toDate(),
+      datetime: (data['datetime'] as Timestamp?)?.toDate() ?? 
+                (data['dateTime'] as Timestamp?)?.toDate() ?? 
+                DateTime.now(),
       status: data['status'] ?? 'pending',
       comment: data['comment'] ?? '',
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 

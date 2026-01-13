@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/services/firebase_service.dart';
+import '../../../core/l10n/app_localizations.dart';
 import '../home/home_screen.dart';
 import '../articles/articles_list_screen.dart';
 import '../schedule/schedule_screen.dart';
@@ -46,6 +47,8 @@ class _MainScreenState extends State<MainScreen> {
         
         final screens = isPsychologist ? _psychologistScreens : _studentScreens;
         
+        final localizations = AppLocalizations.of(context) ?? AppLocalizations(const Locale('ru'));
+        
         return Scaffold(
           body: screens[_selectedIndex],
           bottomNavigationBar: BottomNavigationBar(
@@ -56,22 +59,22 @@ class _MainScreenState extends State<MainScreen> {
               BottomNavigationBarItem(
                 icon: const Icon(Icons.home_outlined),
                 activeIcon: const Icon(Icons.home),
-                label: 'Главная',
+                label: localizations.home,
               ),
               BottomNavigationBarItem(
                 icon: const Icon(Icons.article_outlined),
                 activeIcon: const Icon(Icons.article),
-                label: 'Статьи',
+                label: localizations.articles,
               ),
               BottomNavigationBarItem(
                 icon: const Icon(Icons.calendar_today_outlined),
                 activeIcon: const Icon(Icons.calendar_today),
-                label: 'Запись',
+                label: localizations.schedule,
               ),
               BottomNavigationBarItem(
                 icon: const Icon(Icons.person_outline),
                 activeIcon: const Icon(Icons.person),
-                label: 'Профиль',
+                label: localizations.profile,
               ),
             ],
           ),

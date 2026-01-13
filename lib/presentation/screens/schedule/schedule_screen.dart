@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../core/services/firebase_service.dart';
+import '../../../core/l10n/app_localizations.dart';
 import '../../../data/models/schedule_slot_model.dart';
 import '../../../data/models/user_model.dart';
 
@@ -21,12 +22,13 @@ class ScheduleScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isPsychologist = _isPsychologist(context);
+    final localizations = AppLocalizations.of(context) ?? AppLocalizations(const Locale('ru'));
     
     return Scaffold(
       appBar: AppBar(
         title: Text(isPsychologist 
-            ? 'Моё расписание' 
-            : 'Запись на консультацию'),
+            ? localizations.translate('my_schedule') ?? 'Моё расписание'
+            : localizations.bookAppointment),
       ),
       body: isPsychologist 
           ? _buildPsychologistSchedule(context)
@@ -91,6 +93,7 @@ class ScheduleScreen extends StatelessWidget {
         final slots = snapshot.data ?? [];
 
         if (slots.isEmpty) {
+          final localizations = AppLocalizations.of(context) ?? AppLocalizations(const Locale('ru'));
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -109,7 +112,7 @@ class ScheduleScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  'Нет доступных слотов для записи',
+                  localizations.translate('no_slots_available') ?? 'Нет доступных слотов для записи',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -118,7 +121,7 @@ class ScheduleScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Пожалуйста, зайдите позже',
+                  localizations.translate('please_come_later') ?? 'Пожалуйста, зайдите позже',
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                   ),
@@ -278,8 +281,8 @@ class ScheduleScreen extends StatelessWidget {
                           onPressed: () {
                             _showBookingDialog(context, slot);
                           },
-                          icon: const Icon(Icons.event_available),
-                          label: const Text('Записаться'),
+                        icon: const Icon(Icons.event_available),
+                        label: Text(AppLocalizations.of(context)?.book ?? 'Записаться'),
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
@@ -342,46 +345,55 @@ class ScheduleScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 40),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  _showAddSlotDialog(context, user.uid);
-                },
-                icon: const Icon(Icons.add_circle_outline),
-                label: const Text('Добавить слот'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  _showMySlotsDialog(context, user.uid);
-                },
-                icon: const Icon(Icons.list),
-                label: const Text('Мои слоты'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  _showAppointmentsDialog(context, user.uid);
-                },
-                icon: const Icon(Icons.event_available),
-                label: const Text('Записи на консультации'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-              ),
+            Builder(
+              builder: (context) {
+                final localizations = AppLocalizations.of(context) ?? AppLocalizations(const Locale('ru'));
+                return Column(
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          _showAddSlotDialog(context, user.uid);
+                        },
+                        icon: const Icon(Icons.add_circle_outline),
+                        label: Text(localizations.translate('add_slot') ?? 'Добавить слот'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          _showMySlotsDialog(context, user.uid);
+                        },
+                        icon: const Icon(Icons.list),
+                        label: Text(localizations.translate('my_slots') ?? 'Мои слоты'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          _showAppointmentsDialog(context, user.uid);
+                        },
+                        icon: const Icon(Icons.event_available),
+                        label: Text(localizations.translate('appointments') ?? 'Записи на консультации'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ],
         ),
@@ -392,6 +404,7 @@ class ScheduleScreen extends StatelessWidget {
   // ========== ОБЩИЕ МЕТОДЫ ==========
   void _showBookingDialog(BuildContext context, ScheduleSlot slot) async {
     final firebaseService = context.read<FirebaseService>();
+    final localizations = AppLocalizations.of(context) ?? AppLocalizations(const Locale('ru'));
     
     showDialog(
       context: context,
@@ -404,16 +417,16 @@ class ScheduleScreen extends StatelessWidget {
           children: [
             Icon(Icons.calendar_today, color: Theme.of(context).primaryColor),
             const SizedBox(width: 8),
-            const Text('Подтверждение записи'),
+            Text(localizations.translate('confirm_booking') ?? 'Подтверждение записи'),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Вы уверены, что хотите записаться на эту консультацию?',
-              style: TextStyle(fontSize: 16),
+            Text(
+              localizations.bookConfirm,
+              style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 16),
             Container(
@@ -454,7 +467,7 @@ class ScheduleScreen extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Отмена'),
+            child: Text(localizations.cancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -474,13 +487,14 @@ class ScheduleScreen extends StatelessWidget {
                 
                 if (context.mounted) {
                   Navigator.pop(context); // Закрываем индикатор
+                  final loc = AppLocalizations.of(context) ?? AppLocalizations(const Locale('ru'));
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: const Row(
+                      content: Row(
                         children: [
-                          Icon(Icons.check_circle, color: Colors.white),
-                          SizedBox(width: 8),
-                          Text('Запись успешно создана!'),
+                          const Icon(Icons.check_circle, color: Colors.white),
+                          const SizedBox(width: 8),
+                          Text(loc.bookingSuccess),
                         ],
                       ),
                       backgroundColor: Colors.green,
@@ -494,6 +508,7 @@ class ScheduleScreen extends StatelessWidget {
               } catch (e) {
                 if (context.mounted) {
                   Navigator.pop(context); // Закрываем индикатор
+                  final loc = AppLocalizations.of(context) ?? AppLocalizations(const Locale('ru'));
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Row(
@@ -502,7 +517,7 @@ class ScheduleScreen extends StatelessWidget {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'Ошибка: ${e.toString().contains('Permission denied') ? 'Недостаточно прав доступа. Обратитесь к администратору.' : e.toString()}',
+                              '${loc.bookingError}: ${e.toString().contains('Permission denied') ? loc.contactAdmin : e.toString()}',
                             ),
                           ),
                         ],
@@ -518,7 +533,7 @@ class ScheduleScreen extends StatelessWidget {
                 }
               }
             },
-            child: const Text('Подтвердить'),
+            child: Text(localizations.confirm),
           ),
         ],
       ),

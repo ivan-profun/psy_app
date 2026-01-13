@@ -21,17 +21,19 @@ class ScheduleSlot {
     return ScheduleSlot(
       id: id,
       psychologistId: data['psychologistId'] ?? '',
-      datetime: (data['dateTime'] as Timestamp).toDate(),
+      datetime: (data['datetime'] as Timestamp?)?.toDate() ?? 
+                (data['dateTime'] as Timestamp?)?.toDate() ?? 
+                DateTime.now(),
       isAvailable: data['isAvailable'] ?? true,
       studentId: data['studentId'],
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 
   Map<String, dynamic> toFirestore() {
     return {
       'psychologistId': psychologistId,
-      'dateTime': Timestamp.fromDate(datetime),
+      'datetime': Timestamp.fromDate(datetime),
       'isAvailable': isAvailable,
       'studentId': studentId,
       'createdAt': FieldValue.serverTimestamp(),

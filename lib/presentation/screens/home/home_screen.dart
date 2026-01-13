@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../core/services/firebase_service.dart';
+import '../../../core/l10n/app_localizations.dart';
 import '../../../data/models/article_model.dart';
 import '../../../data/models/schedule_slot_model.dart';
 import '../articles/articles_list_screen.dart';
@@ -104,10 +105,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildHeader(BuildContext context) {
     final user = context.watch<FirebaseService>().currentUser;
     final theme = Theme.of(context);
+    final localizations = AppLocalizations.of(context) ?? AppLocalizations(const Locale('ru'));
     
     // Безопасное извлечение имени пользователя
     String getUserName() {
-      if (user == null) return 'Гость';
+      if (user == null) return localizations.translate('guest') ?? 'Гость';
       
       if (user.email != null && user.email!.isNotEmpty) {
         final email = user.email!;
@@ -119,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
         return user.displayName!;
       }
       
-      return 'Пользователь';
+      return localizations.translate('user') ?? 'Пользователь';
     }
     
     return Container(
@@ -161,7 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Добро пожаловать,',
+                      '${localizations.welcome},',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.white.withOpacity(0.9),
@@ -198,7 +200,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Служба психологической помощи',
+                    localizations.translate('service_name') ?? 'Служба психологической помощи',
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.white.withOpacity(0.95),
@@ -216,6 +218,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildServiceInfo() {
     final theme = Theme.of(context);
+    final localizations = AppLocalizations.of(context) ?? AppLocalizations(const Locale('ru'));
     
     return Card(
       margin: const EdgeInsets.all(16),
@@ -243,9 +246,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Text(
-                  'Информация о службе',
-                  style: TextStyle(
+                Text(
+                  localizations.serviceInfo,
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
@@ -253,13 +256,13 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             const SizedBox(height: 20),
-            _buildInfoRow(Icons.access_time, 'Время работы:', 'Пн-Пт: 9:00-18:00'),
+            _buildInfoRow(Icons.access_time, '${localizations.workingHours}:', 'Пн-Пт: 9:00-18:00'),
             const SizedBox(height: 12),
-            _buildInfoRow(Icons.phone, 'Телефон:', '+7 (XXX) XXX-XX-XX'),
+            _buildInfoRow(Icons.phone, '${localizations.phone}:', '+7 (XXX) XXX-XX-XX'),
             const SizedBox(height: 12),
-            _buildInfoRow(Icons.email, 'Email:', 'psych-help@university.edu'),
+            _buildInfoRow(Icons.email, '${localizations.email}:', 'psych-help@university.edu'),
             const SizedBox(height: 12),
-            _buildInfoRow(Icons.location_on, 'Адрес:', 'ул. Университетская, д. 1, каб. 101'),
+            _buildInfoRow(Icons.location_on, '${localizations.address}:', 'ул. Университетская, д. 1, каб. 101'),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
@@ -277,8 +280,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Мы предоставляем конфиденциальную психологическую помощь '
-                      'студентам и сотрудникам университета.',
+                      localizations.confidentialHelp,
                       style: TextStyle(
                         fontSize: 14,
                         color: theme.colorScheme.onSurface.withOpacity(0.7),
@@ -334,6 +336,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildLatestArticles(BuildContext context) {
     final firebaseService = context.read<FirebaseService>();
+    final localizations = AppLocalizations.of(context) ?? AppLocalizations(const Locale('ru'));
     
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -352,10 +355,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       size: 24,
                     ),
                     const SizedBox(width: 8),
-                    const Flexible(
+                    Flexible(
                       child: Text(
-                        'Свежие статьи',
-                        style: TextStyle(
+                        localizations.latestArticles,
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
@@ -374,7 +377,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   );
                 },
-                child: const Text('Все →'),
+                child: Text('${localizations.allArticles} →'),
               ),
             ],
           ),
@@ -547,6 +550,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildAvailableSlots(BuildContext context) {
     final firebaseService = context.read<FirebaseService>();
+    final localizations = AppLocalizations.of(context) ?? AppLocalizations(const Locale('ru'));
     
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -567,7 +571,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(width: 8),
                     Flexible(
                       child: Text(
-                        'Ближайшие слоты',
+                        localizations.availableSlots,
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -587,7 +591,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   );
                 },
-                child: const Text('Все →'),
+                child: Text('${localizations.allSlots} →'),
               ),
             ],
           ),
@@ -821,8 +825,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 onPressed: () {
                                   _showBookingDialog(context, slot);
                                 },
-                                icon: const Icon(Icons.event_available),
-                                label: const Text('Записаться'),
+                              icon: const Icon(Icons.event_available),
+                              label: Text(AppLocalizations.of(context)?.book ?? 'Записаться'),
                                 style: ElevatedButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(vertical: 14),
                                 ),
@@ -844,6 +848,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _showBookingDialog(BuildContext context, ScheduleSlot slot) async {
     final firebaseService = context.read<FirebaseService>();
+    final localizations = AppLocalizations.of(context) ?? AppLocalizations(const Locale('ru'));
     
     showDialog(
       context: context,
@@ -856,7 +861,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Icon(Icons.calendar_today, color: Theme.of(context).primaryColor),
             const SizedBox(width: 8),
-            const Text('Запись на консультацию'),
+            Text(localizations.bookAppointment),
           ],
         ),
         content: Column(
@@ -864,7 +869,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Вы хотите записаться на консультацию?',
+              localizations.bookConfirm,
               style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 16),
@@ -906,7 +911,7 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Отмена'),
+            child: Text(localizations.cancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -926,13 +931,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 
                 if (context.mounted) {
                   Navigator.pop(context); // Закрываем индикатор
+                  final loc = AppLocalizations.of(context) ?? AppLocalizations(const Locale('ru'));
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: const Row(
+                      content: Row(
                         children: [
-                          Icon(Icons.check_circle, color: Colors.white),
-                          SizedBox(width: 8),
-                          Text('Запись успешно оформлена!'),
+                          const Icon(Icons.check_circle, color: Colors.white),
+                          const SizedBox(width: 8),
+                          Text(loc.bookingSuccess),
                         ],
                       ),
                       backgroundColor: Colors.green,
@@ -946,6 +952,7 @@ class _HomeScreenState extends State<HomeScreen> {
               } catch (e) {
                 if (context.mounted) {
                   Navigator.pop(context); // Закрываем индикатор
+                  final loc = AppLocalizations.of(context) ?? AppLocalizations(const Locale('ru'));
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Row(
@@ -954,7 +961,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'Ошибка: ${e.toString().contains('Permission denied') ? 'Недостаточно прав доступа. Обратитесь к администратору.' : e.toString()}',
+                              '${loc.bookingError}: ${e.toString().contains('Permission denied') ? loc.contactAdmin : e.toString()}',
                             ),
                           ),
                         ],
@@ -970,7 +977,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 }
               }
             },
-            child: const Text('Подтвердить'),
+            child: Text(localizations.confirm),
           ),
         ],
       ),

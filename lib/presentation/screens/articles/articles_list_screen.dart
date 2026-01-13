@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../core/services/firebase_service.dart';
+import '../../../core/l10n/app_localizations.dart';
 import '../../../data/models/article_model.dart';
 import 'article_detail_screen.dart';
 import 'article_create_edit_screen.dart';
@@ -18,10 +19,11 @@ class ArticlesListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = context.watch<FirebaseService>().currentUser;
     final isPsychologist = user != null && user.email?.contains('psych') == true;
+    final localizations = AppLocalizations.of(context) ?? AppLocalizations(const Locale('ru'));
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Статьи и материалы'),
+        title: Text(localizations.articles),
       ),
       body: StreamBuilder<List<ArticleModel>>(
         stream: isPsychologist && showCreateButton
@@ -33,7 +35,7 @@ class ArticlesListScreen extends StatelessWidget {
           }
 
           if (snapshot.hasError) {
-            return Center(child: Text('Ошибка: ${snapshot.error}'));
+            return Center(child: Text('${localizations.error}: ${snapshot.error}'));
           }
 
           final articles = snapshot.data ?? [];
@@ -47,8 +49,8 @@ class ArticlesListScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     isPsychologist && showCreateButton
-                        ? 'У вас нет статей'
-                        : 'Нет доступных статей',
+                        ? localizations.translate('no_articles') ?? 'У вас нет статей'
+                        : localizations.noArticles,
                   ),
                 ],
               ),
@@ -93,8 +95,8 @@ class ArticlesListScreen extends StatelessWidget {
                               ),
                             ),
                             if (isPsychologist && showCreateButton && !article.isPublished)
-                              const Chip(
-                                label: Text('Черновик'),
+                              Chip(
+                                label: Text(localizations.translate('draft') ?? 'Черновик'),
                                 backgroundColor: Colors.orange,
                               ),
                           ],
@@ -148,7 +150,7 @@ class ArticlesListScreen extends StatelessWidget {
                                   ),
                                 );
                               },
-                              child: const Text('Читать →'),
+                              child: Text(localizations.translate('read_more') ?? 'Читать →'),
                             ),
                           ],
                         ),
