@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'core/services/firebase_service.dart';
+import 'core/providers/settings_provider.dart';
+import 'core/l10n/app_localizations.dart';
 import 'presentation/screens/auth/auth_wrapper.dart';
 import 'presentation/theme/app_theme.dart';
 
@@ -31,13 +34,39 @@ class MyApp extends StatelessWidget {
         Provider<FirebaseService>(
           create: (_) => FirebaseService(),
         ),
+        ChangeNotifierProvider(
+          create: (_) => SettingsProvider(),
+        ),
       ],
-      child: MaterialApp(
-        title: 'Психологическая помощь',
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.system,
-        home: const AuthWrapper(),
+      child: Consumer<SettingsProvider>(
+        builder: (context, settings, _) {
+          return MaterialApp(
+            title: 'Психологическая помощь',
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: settings.themeMode,
+            locale: Locale(settings.language),
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('ru', 'RU'),
+              Locale('en', 'US'),
+            ],
+            builder: (context, child) {
+              return MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                  textScaleFactor: settings.textScaleFactor,
+                ),
+                child: child!,
+              );
+            },
+            home: const AuthWrapper(),
+          );
+        },
       ),
     );
   }

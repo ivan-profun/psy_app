@@ -160,11 +160,9 @@ class FirebaseService {
 
   Stream<List<ScheduleSlot>> getAvailableSlotsStream({int limit = 10}) {
     try {
+      // Пробуем получить все слоты и фильтровать на клиенте из-за возможных проблем с правами
       return _firestore
           .collection('schedule')
-          .where('isAvailable', isEqualTo: true)
-          .orderBy('dateTime')
-          .limit(limit)
           .snapshots()
           .handleError((error) {
             print('Ошибка при получении слотов: $error');
@@ -174,10 +172,15 @@ class FirebaseService {
           .map((snapshot) {
             try {
               final now = DateTime.now();
-              return snapshot.docs
+              final slots = snapshot.docs
                   .map((doc) {
                     try {
-                      return ScheduleSlot.fromFirestore(doc.data(), doc.id);
+                      final data = doc.data();
+                      // Проверяем наличие необходимых полей
+                      if (data['dateTime'] == null) {
+                        return null;
+                      }
+                      return ScheduleSlot.fromFirestore(data, doc.id);
                     } catch (e) {
                       print('Ошибка парсинга слота ${doc.id}: $e');
                       return null;
@@ -186,6 +189,10 @@ class FirebaseService {
                   .where((slot) => slot != null && slot!.isAvailable && slot.datetime.isAfter(now))
                   .cast<ScheduleSlot>()
                   .toList();
+              
+              // Сортируем и ограничиваем
+              slots.sort((a, b) => a.datetime.compareTo(b.datetime));
+              return slots.take(limit).toList();
             } catch (e) {
               print('Ошибка обработки слотов: $e');
               return <ScheduleSlot>[];

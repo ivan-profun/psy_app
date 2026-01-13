@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../core/services/firebase_service.dart';
 import './profile_student_screen.dart';
 import './profile_psychologist_screen.dart';
+import '../settings/settings_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -19,26 +20,10 @@ class ProfileScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  title: Row(
-                    children: [
-                      Icon(Icons.settings, color: Theme.of(context).primaryColor),
-                      const SizedBox(width: 8),
-                      const Text('Настройки'),
-                    ],
-                  ),
-                  content: const Text('Функционал настроек будет реализован в следующей версии.'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Закрыть'),
-                    ),
-                  ],
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(),
                 ),
               );
             },

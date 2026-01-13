@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/services/firebase_service.dart';
 import '../../../data/models/user_model.dart';
+import '../settings/settings_screen.dart';
 
 class ProfileStudentScreen extends StatefulWidget {
   const ProfileStudentScreen({super.key});
@@ -96,35 +97,20 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
                 
                 const SizedBox(height: 16),
                 
-                // Настройки
+                // Настройки приложения
                 Card(
-                  child: Column(
-                    children: [
-                      ListTile(
-                        leading: Icon(Icons.settings, color: Theme.of(context).primaryColor),
-                        title: const Text('Настройки аккаунта'),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                        onTap: () {
-                          _showSettingsDialog(context);
-                        },
-                      ),
-                      ListTile(
-                        leading: Icon(Icons.notifications, color: Theme.of(context).primaryColor),
-                        title: const Text('Уведомления'),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                        onTap: () {
-                          _showNotificationsDialog(context);
-                        },
-                      ),
-                      ListTile(
-                        leading: Icon(Icons.security, color: Theme.of(context).primaryColor),
-                        title: const Text('Конфиденциальность'),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                        onTap: () {
-                          _showPrivacyDialog(context);
-                        },
-                      ),
-                    ],
+                  child: ListTile(
+                    leading: Icon(Icons.settings, color: Theme.of(context).primaryColor),
+                    title: const Text('Настройки приложения'),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SettingsScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -190,81 +176,6 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
                 ),
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showSettingsDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Row(
-          children: [
-            Icon(Icons.settings, color: Theme.of(context).primaryColor),
-            const SizedBox(width: 8),
-            const Text('Настройки аккаунта'),
-          ],
-        ),
-        content: const Text('Функционал настроек аккаунта будет реализован в следующей версии.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Закрыть'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showNotificationsDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Row(
-          children: [
-            Icon(Icons.notifications, color: Theme.of(context).primaryColor),
-            const SizedBox(width: 8),
-            const Text('Уведомления'),
-          ],
-        ),
-        content: const Text('Функционал управления уведомлениями будет реализован в следующей версии.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Закрыть'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showPrivacyDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Row(
-          children: [
-            Icon(Icons.security, color: Theme.of(context).primaryColor),
-            const SizedBox(width: 8),
-            const Text('Конфиденциальность'),
-          ],
-        ),
-        content: const Text('Все ваши данные защищены и хранятся в соответствии с политикой конфиденциальности.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Закрыть'),
           ),
         ],
       ),

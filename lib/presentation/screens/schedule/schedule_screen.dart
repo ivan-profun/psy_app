@@ -46,7 +46,46 @@ class ScheduleScreen extends StatelessWidget {
         }
 
         if (snapshot.hasError) {
-          return Center(child: Text('Ошибка: ${snapshot.error}'));
+          final error = snapshot.error.toString();
+          final isPermissionError = error.contains('permission-denied') || 
+                                   error.contains('PERMISSION_DENIED');
+          
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    isPermissionError ? Icons.lock : Icons.error_outline,
+                    size: 64,
+                    color: Colors.orange,
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    isPermissionError 
+                        ? 'Недостаточно прав доступа'
+                        : 'Ошибка загрузки',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    isPermissionError
+                        ? 'Обратитесь к администратору для настройки прав доступа к расписанию в Firestore'
+                        : 'Проверьте подключение к интернету и попробуйте снова',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
         }
 
         final slots = snapshot.data ?? [];
@@ -231,16 +270,19 @@ class ScheduleScreen extends StatelessWidget {
                       },
                     ),
                     const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          _showBookingDialog(context, slot);
-                        },
-                        icon: const Icon(Icons.event_available),
-                        label: const Text('Записаться'),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                    Material(
+                      color: Colors.transparent,
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            _showBookingDialog(context, slot);
+                          },
+                          icon: const Icon(Icons.event_available),
+                          label: const Text('Записаться'),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
                         ),
                       ),
                     ),
