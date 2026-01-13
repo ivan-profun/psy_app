@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../data/models/article_model.dart';
@@ -26,16 +27,35 @@ class FirebaseService {
 
   // ========== ARTICLES ==========
   Stream<List<ArticleModel>> getArticlesStream() {
-    return _firestore
+    final controller = StreamController<List<ArticleModel>>();
+    
+    _firestore
         .collection('articles')
         .where('isPublished', isEqualTo: true)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => ArticleModel.fromFirestore(doc.data(), doc.id))
-          .toList();
-    });
+        .listen(
+          (snapshot) {
+            try {
+              final articles = snapshot.docs
+                  .map((doc) => ArticleModel.fromFirestore(doc.data(), doc.id))
+                  .toList();
+              
+              // Сортируем на клиенте
+              articles.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+              controller.add(articles);
+            } catch (e) {
+              print('Ошибка обработки статей: $e');
+              controller.add(<ArticleModel>[]);
+            }
+          },
+          onError: (error) {
+            print('Ошибка при получении статей: $error');
+            controller.add(<ArticleModel>[]);
+          },
+        );
+    
+    controller.onCancel = () {};
+    return controller.stream;
   }
 
   // ========== APPOINTMENTS ==========
@@ -43,31 +63,70 @@ class FirebaseService {
     final userId = _auth.currentUser?.uid;
     if (userId == null) return Stream.value([]);
 
-    return _firestore
+    final controller = StreamController<List<AppointmentModel>>();
+    
+    _firestore
         .collection('appointments')
         .where('studentId', isEqualTo: userId)
-        .orderBy('datetime', descending: true)
         .snapshots()
-        .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => AppointmentModel.fromFirestore(doc.data(), doc.id))
-          .toList();
-    });
+        .listen(
+          (snapshot) {
+            try {
+              final appointments = snapshot.docs
+                  .map((doc) => AppointmentModel.fromFirestore(doc.data(), doc.id))
+                  .toList();
+              
+              // Сортируем на клиенте
+              appointments.sort((a, b) => b.datetime.compareTo(a.datetime));
+              controller.add(appointments);
+            } catch (e) {
+              print('Ошибка обработки записей: $e');
+              controller.add(<AppointmentModel>[]);
+            }
+          },
+          onError: (error) {
+            print('Ошибка при получении записей: $error');
+            controller.add(<AppointmentModel>[]);
+          },
+        );
+    
+    controller.onCancel = () {};
+    return controller.stream;
   }
 
   // ========== SCHEDULES ==========
   Stream<List<ScheduleModel>> getAvailableSchedulesStream() {
-    return _firestore
+    final controller = StreamController<List<ScheduleModel>>();
+    
+    _firestore
         .collection('schedule')
         .where('isAvailable', isEqualTo: true)
-        .where('datetime', isGreaterThanOrEqualTo: DateTime.now())
-        .orderBy('datetime')
         .snapshots()
-        .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => ScheduleModel.fromFirestore(doc.data(), doc.id))
-          .toList();
-    });
+        .listen(
+          (snapshot) {
+            try {
+              final now = DateTime.now();
+              final schedules = snapshot.docs
+                  .map((doc) => ScheduleModel.fromFirestore(doc.data(), doc.id))
+                  .where((schedule) => schedule.date.isAfter(now) || schedule.date.isAtSameMomentAs(now))
+                  .toList();
+              
+              // Сортируем на клиенте
+              schedules.sort((a, b) => a.date.compareTo(b.date));
+              controller.add(schedules);
+            } catch (e) {
+              print('Ошибка обработки расписания: $e');
+              controller.add(<ScheduleModel>[]);
+            }
+          },
+          onError: (error) {
+            print('Ошибка при получении расписания: $error');
+            controller.add(<ScheduleModel>[]);
+          },
+        );
+    
+    controller.onCancel = () {};
+    return controller.stream;
   }
 
   Future<void> createAppointment({
@@ -97,16 +156,35 @@ class FirebaseService {
 
   // ========== NOTES ==========
   Stream<List<NoteModel>> getNotesByAppointmentId(String appointmentId) {
-    return _firestore
+    final controller = StreamController<List<NoteModel>>();
+    
+    _firestore
         .collection('notes')
         .where('appointmentId', isEqualTo: appointmentId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => NoteModel.fromFirestore(doc.data(), doc.id))
-          .toList();
-    });
+        .listen(
+          (snapshot) {
+            try {
+              final notes = snapshot.docs
+                  .map((doc) => NoteModel.fromFirestore(doc.data(), doc.id))
+                  .toList();
+              
+              // Сортируем на клиенте
+              notes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+              controller.add(notes);
+            } catch (e) {
+              print('Ошибка обработки заметок: $e');
+              controller.add(<NoteModel>[]);
+            }
+          },
+          onError: (error) {
+            print('Ошибка при получении заметок: $error');
+            controller.add(<NoteModel>[]);
+          },
+        );
+    
+    controller.onCancel = () {};
+    return controller.stream;
   }
 
   Future<void> createNote({
@@ -122,6 +200,36 @@ class FirebaseService {
       'text': text,
       'createdAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  Future<void> updateScheduleSlot({
+    required String slotId,
+    DateTime? datetime,
+    bool? isAvailable,
+  }) async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) throw Exception('Пользователь не авторизован');
+
+    final slotDoc = await _firestore.collection('schedule').doc(slotId).get();
+    if (!slotDoc.exists) throw Exception('Слот не найден');
+
+    final slotData = slotDoc.data();
+    if (slotData == null) throw Exception('Слот не найден');
+
+    if ((slotData['psychologistId'] as String?) != userId) {
+      throw Exception('Недостаточно прав для изменения слота');
+    }
+
+    if (slotData['studentId'] != null) {
+      throw Exception('Нельзя редактировать забронированный слот');
+    }
+
+    final updateData = <String, dynamic>{};
+    if (datetime != null) updateData['datetime'] = Timestamp.fromDate(datetime);
+    if (isAvailable != null) updateData['isAvailable'] = isAvailable;
+
+    if (updateData.isEmpty) return;
+    await _firestore.collection('schedule').doc(slotId).update(updateData);
   }
 
   // ========== AUTH ==========
@@ -177,12 +285,13 @@ class FirebaseService {
   }
 
   Stream<List<ScheduleSlot>> getAvailableSlotsStream({int limit = 10}) {
-    try {
-      // Пробуем получить все слоты и фильтровать на клиенте из-за возможных проблем с правами
-      return _firestore
-          .collection('schedule')
-          .snapshots()
-          .map((snapshot) {
+    final controller = StreamController<List<ScheduleSlot>>();
+    
+    _firestore
+        .collection('schedule')
+        .snapshots()
+        .listen(
+          (snapshot) {
             try {
               final now = DateTime.now();
               final slots = snapshot.docs
@@ -205,27 +314,177 @@ class FirebaseService {
               
               // Сортируем и ограничиваем
               slots.sort((a, b) => a.datetime.compareTo(b.datetime));
-              return slots.take(limit).toList();
+              controller.add(slots.take(limit).toList());
             } catch (e) {
               print('Ошибка обработки слотов: $e');
-              return <ScheduleSlot>[];
+              controller.add(<ScheduleSlot>[]);
             }
-          })
-          .handleError((error) {
+          },
+          onError: (error) {
             print('Ошибка при получении слотов: $error');
-            // Возвращаем пустой список при ошибке
-            return <ScheduleSlot>[];
-          });
-    } catch (e) {
-      print('Ошибка инициализации потока слотов: $e');
-      return Stream.value(<ScheduleSlot>[]);
-    }
+            controller.add(<ScheduleSlot>[]);
+          },
+        );
+    
+    controller.onCancel = () {
+      // Stream будет закрыт автоматически при отмене подписки
+    };
+    
+    return controller.stream;
+  }
+
+  // Получить слоты психолога
+  Stream<List<ScheduleSlot>> getPsychologistSlotsStream(String psychologistId) {
+    final controller = StreamController<List<ScheduleSlot>>();
+    
+    _firestore
+        .collection('schedule')
+        .where('psychologistId', isEqualTo: psychologistId)
+        .snapshots()
+        .listen(
+          (snapshot) {
+            try {
+              final slots = snapshot.docs
+                  .map((doc) {
+                    try {
+                      final data = doc.data();
+                      if (data['datetime'] == null && data['dateTime'] == null) {
+                        return null;
+                      }
+                      return ScheduleSlot.fromFirestore(data, doc.id);
+                    } catch (e) {
+                      print('Ошибка парсинга слота ${doc.id}: $e');
+                      return null;
+                    }
+                  })
+                  .where((slot) => slot != null)
+                  .cast<ScheduleSlot>()
+                  .toList();
+              
+              // Сортируем на клиенте
+              slots.sort((a, b) => a.datetime.compareTo(b.datetime));
+              controller.add(slots);
+            } catch (e) {
+              print('Ошибка обработки слотов психолога: $e');
+              controller.add(<ScheduleSlot>[]);
+            }
+          },
+          onError: (error) {
+            print('Ошибка при получении слотов психолога: $error');
+            controller.add(<ScheduleSlot>[]);
+          },
+        );
+    
+    controller.onCancel = () {};
+    return controller.stream;
+  }
+
+  // Получить записи психолога
+  Stream<List<AppointmentModel>> getPsychologistAppointmentsStream(String psychologistId) {
+    final controller = StreamController<List<AppointmentModel>>();
+    
+    _firestore
+        .collection('appointments')
+        .where('psychologistId', isEqualTo: psychologistId)
+        .snapshots()
+        .listen(
+          (snapshot) {
+            try {
+              final appointments = snapshot.docs
+                  .map((doc) => AppointmentModel.fromFirestore(doc.data(), doc.id))
+                  .toList();
+              
+              // Сортируем на клиенте
+              appointments.sort((a, b) => b.datetime.compareTo(a.datetime));
+              controller.add(appointments);
+            } catch (e) {
+              print('Ошибка обработки записей психолога: $e');
+              controller.add(<AppointmentModel>[]);
+            }
+          },
+          onError: (error) {
+            print('Ошибка при получении записей психолога: $error');
+            controller.add(<AppointmentModel>[]);
+          },
+        );
+    
+    controller.onCancel = () {};
+    return controller.stream;
+  }
+
+  // Добавить слот для психолога
+  Future<void> addScheduleSlot({
+    required String psychologistId,
+    required DateTime datetime,
+  }) async {
+    await _firestore.collection('schedule').add({
+      'psychologistId': psychologistId,
+      'datetime': datetime,
+      'isAvailable': true,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  // Удалить слот
+  Future<void> deleteScheduleSlot(String slotId) async {
+    await _firestore.collection('schedule').doc(slotId).delete();
+  }
+
+  // Обновить статус записи
+  Future<void> updateAppointmentStatus(String appointmentId, String status) async {
+    await _firestore.collection('appointments').doc(appointmentId).update({
+      'status': status,
+    });
+  }
+
+  // Создать запись (для психолога)
+  Future<void> createAppointmentForPsychologist({
+    required String psychologistId,
+    required String studentId,
+    required DateTime datetime,
+    String? comment,
+  }) async {
+    await _firestore.collection('appointments').add({
+      'studentId': studentId,
+      'psychologistId': psychologistId,
+      'datetime': datetime,
+      'status': 'booked',
+      'comment': comment ?? '',
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  // Обновить запись (для психолога)
+  Future<void> updateAppointment({
+    required String appointmentId,
+    String? studentId,
+    DateTime? datetime,
+    String? status,
+    String? comment,
+  }) async {
+    final updateData = <String, dynamic>{};
+    if (studentId != null) updateData['studentId'] = studentId;
+    if (datetime != null) updateData['datetime'] = Timestamp.fromDate(datetime);
+    if (status != null) updateData['status'] = status;
+    if (comment != null) updateData['comment'] = comment;
+    
+    await _firestore.collection('appointments').doc(appointmentId).update(updateData);
+  }
+
+  // Удалить запись (для психолога)
+  Future<void> deleteAppointment(String appointmentId) async {
+    await _firestore.collection('appointments').doc(appointmentId).delete();
   }
 
   // Запись на сессию
   Future<void> bookAppointment(ScheduleSlot slot) async {
     final userId = _auth.currentUser?.uid;
     if (userId == null) throw Exception('Пользователь не авторизован');
+
+    final role = await getUserRole();
+    if (role == 'psychologist' || role == 'admin') {
+      throw Exception('Психолог не может записаться на сессию');
+    }
 
     // Обновляем слот
     await _firestore.collection('schedule').doc(slot.id).update({
@@ -255,62 +514,209 @@ class FirebaseService {
 
   // Получить заметки студента
   Stream<List<NoteModel>> getStudentNotesStream(String userId) {
-    return _firestore
+    final controller = StreamController<List<NoteModel>>();
+    
+    _firestore
         .collection('notes')
         .where('authorId', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .listen(
+          (snapshot) {
+            try {
+              final notes = snapshot.docs
+                  .map((doc) => NoteModel.fromFirestore(doc.data(), doc.id))
+                  .toList();
+              
+              // Сортируем на клиенте
+              notes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+              controller.add(notes);
+            } catch (e) {
+              print('Ошибка обработки заметок студента: $e');
+              controller.add(<NoteModel>[]);
+            }
+          },
+          onError: (error) {
+            print('Ошибка при получении заметок студента: $error');
+            controller.add(<NoteModel>[]);
+          },
+        );
+    
+    controller.onCancel = () {};
+    return controller.stream;
+  }
+
+  // Для психолога: получить количество статей (динамически)
+  Stream<Map<String, int>> getPsychologistArticlesCountStream(String psychologistId) {
+    return _firestore
+        .collection('articles')
+        .where('authorId', isEqualTo: psychologistId)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => NoteModel.fromFirestore(doc.data(), doc.id))
-          .toList();
+          final total = snapshot.docs.length;
+          final published = snapshot.docs
+              .where((doc) => doc.data()['isPublished'] == true)
+              .length;
+          return {
+            'total': total,
+            'published': published,
+            'draft': total - published,
+          };
+        })
+        .handleError((error) {
+          print('Ошибка при получении статистики статей: $error');
+          return {'total': 0, 'published': 0, 'draft': 0};
+        });
+  }
+
+  // Для психолога: получить количество сессий (динамически)
+  Stream<Map<String, int>> getPsychologistSessionsCountStream(String psychologistId) {
+    return _firestore
+        .collection('appointments')
+        .where('psychologistId', isEqualTo: psychologistId)
+        .snapshots()
+        .map((snapshot) {
+          final now = DateTime.now();
+          final all = snapshot.docs.length;
+          final upcoming = snapshot.docs
+              .where((doc) {
+                final datetime = (doc.data()['datetime'] as Timestamp?)?.toDate();
+                return datetime != null && datetime.isAfter(now);
+              })
+              .length;
+          final completed = snapshot.docs
+              .where((doc) => doc.data()['status'] == 'completed')
+              .length;
+          return {
+            'total': all,
+            'upcoming': upcoming,
+            'completed': completed,
+          };
+        })
+        .handleError((error) {
+          print('Ошибка при получении статистики сессий: $error');
+          return {'total': 0, 'upcoming': 0, 'completed': 0};
+        });
+  }
+
+  // Для студента: получить количество завершенных сессий (динамически)
+  Stream<int> getCompletedSessionsCountStream(String userId) {
+    return _firestore
+        .collection('appointments')
+        .where('studentId', isEqualTo: userId)
+        .where('status', isEqualTo: 'completed')
+        .snapshots()
+        .map((snapshot) => snapshot.docs.length)
+        .handleError((error) {
+          print('Ошибка при получении статистики сессий студента: $error');
+          return 0;
+        });
+  }
+
+  // Для админа: получить статистику системы (динамически)
+  Stream<Map<String, int>> getSystemStatisticsStream() {
+    final controller = StreamController<Map<String, int>>();
+    Map<String, int> currentStats = {'total_users': 0, 'total_articles': 0, 'total_appointments': 0};
+    StreamSubscription? usersSub;
+    StreamSubscription? articlesSub;
+    StreamSubscription? appointmentsSub;
+
+    void updateStats() {
+      if (!controller.isClosed) {
+        controller.add(Map<String, int>.from(currentStats));
+      }
+    }
+
+    usersSub = _firestore.collection('users').snapshots().listen((snapshot) {
+      currentStats['total_users'] = snapshot.docs.length;
+      updateStats();
+    }, onError: (error) {
+      print('Ошибка при получении пользователей: $error');
+    });
+
+    articlesSub = _firestore.collection('articles').snapshots().listen((snapshot) {
+      currentStats['total_articles'] = snapshot.docs.length;
+      updateStats();
+    }, onError: (error) {
+      print('Ошибка при получении статей: $error');
+    });
+
+    appointmentsSub = _firestore.collection('appointments').snapshots().listen((snapshot) {
+      currentStats['total_appointments'] = snapshot.docs.length;
+      updateStats();
+    }, onError: (error) {
+      print('Ошибка при получении записей: $error');
+    });
+
+    controller.onCancel = () {
+      usersSub?.cancel();
+      articlesSub?.cancel();
+      appointmentsSub?.cancel();
+    };
+
+    return controller.stream.handleError((error) {
+      print('Ошибка при получении статистики системы: $error');
+      return {'total_users': 0, 'total_articles': 0, 'total_appointments': 0};
     });
   }
 
-  // Для психолога: получить количество статей
-  Future<Map<String, int>> getPsychologistArticlesCount(String psychologistId) async {
-    final totalSnapshot = await _firestore
-        .collection('articles')
-        .where('authorId', isEqualTo: psychologistId)
-        .get();
+  // Получить всех пользователей (для админа)
+  Stream<List<UserModel>> getAllUsersStream() {
+    final controller = StreamController<List<UserModel>>();
     
-    final publishedSnapshot = await _firestore
-        .collection('articles')
-        .where('authorId', isEqualTo: psychologistId)
-        .where('isPublished', isEqualTo: true)
-        .get();
+    _firestore
+        .collection('users')
+        .snapshots()
+        .listen(
+          (snapshot) {
+            try {
+              final users = snapshot.docs
+                  .map((doc) => UserModel.fromFirestore(doc.data(), doc.id))
+                  .toList();
+              
+              // Сортируем на клиенте
+              users.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+              controller.add(users);
+            } catch (e) {
+              print('Ошибка обработки пользователей: $e');
+              controller.add(<UserModel>[]);
+            }
+          },
+          onError: (error) {
+            print('Ошибка при получении пользователей: $error');
+            controller.add(<UserModel>[]);
+          },
+        );
     
-    return {
-      'total': totalSnapshot.docs.length,
-      'published': publishedSnapshot.docs.length,
-      'draft': totalSnapshot.docs.length - publishedSnapshot.docs.length,
-    };
+    controller.onCancel = () {};
+    return controller.stream;
   }
 
-  // Для психолога: получить количество сессий
-  Future<Map<String, int>> getPsychologistSessionsCount(String psychologistId) async {
-    final allSnapshot = await _firestore
-        .collection('appointments')
-        .where('psychologistId', isEqualTo: psychologistId)
-        .get();
-    
-    final upcomingSnapshot = await _firestore
-        .collection('appointments')
-        .where('psychologistId', isEqualTo: psychologistId)
-        .where('datetime', isGreaterThanOrEqualTo: DateTime.now())
-        .get();
-    
-    final completedSnapshot = await _firestore
-        .collection('appointments')
-        .where('psychologistId', isEqualTo: psychologistId)
-        .where('status', isEqualTo: 'completed')
-        .get();
-    
-    return {
-      'total': allSnapshot.docs.length,
-      'upcoming': upcomingSnapshot.docs.length,
-      'completed': completedSnapshot.docs.length,
-    };
+  // Получить всех студентов (для психолога)
+  Future<List<UserModel>> getStudentsList() async {
+    try {
+      final snapshot = await _firestore
+          .collection('users')
+          .where('role', isEqualTo: 'student')
+          .get();
+      
+      final students = snapshot.docs
+          .map((doc) => UserModel.fromFirestore(doc.data(), doc.id))
+          .toList();
+      
+      students.sort((a, b) => a.name.compareTo(b.name));
+      return students;
+    } catch (e) {
+      print('Ошибка получения студентов: $e');
+      return [];
+    }
+  }
+
+  // Обновить роль пользователя (для админа)
+  Future<void> updateUserRole(String userId, String role) async {
+    await _firestore.collection('users').doc(userId).update({
+      'role': role,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   // Создание/редактирование статьи (для психолога)
@@ -343,16 +749,35 @@ class FirebaseService {
 
   // Получить статьи психолога
   Stream<List<ArticleModel>> getPsychologistArticlesStream(String psychologistId) {
-    return _firestore
+    final controller = StreamController<List<ArticleModel>>();
+    
+    _firestore
         .collection('articles')
         .where('authorId', isEqualTo: psychologistId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => ArticleModel.fromFirestore(doc.data(), doc.id))
-          .toList();
-    });
+        .listen(
+          (snapshot) {
+            try {
+              final articles = snapshot.docs
+                  .map((doc) => ArticleModel.fromFirestore(doc.data(), doc.id))
+                  .toList();
+              
+              // Сортируем на клиенте
+              articles.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+              controller.add(articles);
+            } catch (e) {
+              print('Ошибка обработки статей психолога: $e');
+              controller.add(<ArticleModel>[]);
+            }
+          },
+          onError: (error) {
+            print('Ошибка при получении статей психолога: $error');
+            controller.add(<ArticleModel>[]);
+          },
+        );
+    
+    controller.onCancel = () {};
+    return controller.stream;
   }
 
   // Получить роль пользователя из Firestore
@@ -383,17 +808,35 @@ class FirebaseService {
   }
 
   Stream<List<ArticleModel>> getLatestArticlesStream({int limit = 3}) {
-    return _firestore
+    final controller = StreamController<List<ArticleModel>>();
+    
+    _firestore
         .collection('articles')
-        .orderBy('createdAt', descending: true)
-        .limit(limit)
         .snapshots()
-        .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => ArticleModel.fromFirestore(doc.data(), doc.id))
-          .where((article) => article.isPublished)
-          .toList();
-    });
+        .listen(
+          (snapshot) {
+            try {
+              final articles = snapshot.docs
+                  .map((doc) => ArticleModel.fromFirestore(doc.data(), doc.id))
+                  .where((article) => article.isPublished)
+                  .toList();
+              
+              // Сортируем на клиенте
+              articles.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+              controller.add(articles.take(limit).toList());
+            } catch (e) {
+              print('Ошибка обработки последних статей: $e');
+              controller.add(<ArticleModel>[]);
+            }
+          },
+          onError: (error) {
+            print('Ошибка при получении последних статей: $error');
+            controller.add(<ArticleModel>[]);
+          },
+        );
+    
+    controller.onCancel = () {};
+    return controller.stream;
   }
 
   Stream<UserModel?> getCurrentUserStream() {

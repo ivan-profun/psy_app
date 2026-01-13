@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import '../../../core/services/firebase_service.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../data/models/user_model.dart';
+import '../../../data/models/appointment_model.dart';
 import '../articles/article_create_edit_screen.dart';
+import '../schedule/schedule_screen.dart';
 import '../../widgets/avatar_picker.dart';
 
 class ProfilePsychologistScreen extends StatefulWidget {
@@ -14,31 +16,15 @@ class ProfilePsychologistScreen extends StatefulWidget {
 }
 
 class _ProfilePsychologistScreenState extends State<ProfilePsychologistScreen> {
-  Map<String, int> _articlesCount = {'total': 0, 'published': 0, 'draft': 0};
-  Map<String, int> _sessionsCount = {'total': 0, 'upcoming': 0, 'completed': 0};
-
-  @override
-  void initState() {
-    super.initState();
-    _loadCounts();
-  }
-
-  Future<void> _loadCounts() async {
-    final userId = context.read<FirebaseService>().currentUser?.uid;
-    if (userId != null) {
-      final articles = await context.read<FirebaseService>().getPsychologistArticlesCount(userId);
-      final sessions = await context.read<FirebaseService>().getPsychologistSessionsCount(userId);
-      
-      setState(() {
-        _articlesCount = articles;
-        _sessionsCount = sessions;
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     final user = context.watch<FirebaseService>().currentUser;
+    final userId = user?.uid;
+    
+    if (userId == null) {
+      return const Center(child: Text('Пользователь не авторизован'));
+    }
     
     return StreamBuilder<UserModel?>(
       stream: context.read<FirebaseService>().getCurrentUserStream(),
@@ -104,94 +90,106 @@ class _ProfilePsychologistScreenState extends State<ProfilePsychologistScreen> {
                 
                 const SizedBox(height: 16),
                 
-                // Статистика статей
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          AppLocalizations.of(context)?.translate('articles_statistics') ?? 'Статистика статей',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Wrap(
-                          spacing: 12,
-                          runSpacing: 12,
+                // Статистика статей (динамическая)
+                StreamBuilder<Map<String, int>>(
+                  stream: context.read<FirebaseService>().getPsychologistArticlesCountStream(userId),
+                  builder: (context, articlesSnapshot) {
+                    final articlesCount = articlesSnapshot.data ?? {'total': 0, 'published': 0, 'draft': 0};
+                    return Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildStatCard(
-                              icon: Icons.article,
-                              title: AppLocalizations.of(context)?.translate('total_articles') ?? 'Всего статей',
-                              value: _articlesCount['total'].toString(),
-                              color: Colors.blue,
+                            Text(
+                              AppLocalizations.of(context)?.translate('articles_statistics') ?? 'Статистика статей',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                            _buildStatCard(
-                              icon: Icons.public,
-                              title: AppLocalizations.of(context)?.translate('published_articles') ?? 'Опубликовано',
-                              value: _articlesCount['published'].toString(),
-                              color: Colors.green,
-                            ),
-                            _buildStatCard(
-                              icon: Icons.drafts,
-                              title: AppLocalizations.of(context)?.translate('draft_articles') ?? 'Черновики',
-                              value: _articlesCount['draft'].toString(),
-                              color: Colors.orange,
+                            const SizedBox(height: 16),
+                            Column(
+                              children: [
+                                _buildStatCard(
+                                  icon: Icons.article,
+                                  title: AppLocalizations.of(context)?.translate('total_articles') ?? 'Всего статей',
+                                  value: articlesCount['total'].toString(),
+                                  color: Colors.blue,
+                                ),
+                                const SizedBox(height: 12),
+                                _buildStatCard(
+                                  icon: Icons.public,
+                                  title: AppLocalizations.of(context)?.translate('published_articles') ?? 'Опубликовано',
+                                  value: articlesCount['published'].toString(),
+                                  color: Colors.green,
+                                ),
+                                const SizedBox(height: 12),
+                                _buildStatCard(
+                                  icon: Icons.drafts,
+                                  title: AppLocalizations.of(context)?.translate('draft_articles') ?? 'Черновики',
+                                  value: articlesCount['draft'].toString(),
+                                  color: Colors.orange,
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  },
                 ),
                 
                 const SizedBox(height: 16),
                 
-                // Статистика сессий
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          AppLocalizations.of(context)?.translate('sessions_statistics') ?? 'Статистика сессий',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Wrap(
-                          spacing: 12,
-                          runSpacing: 12,
+                // Статистика сессий (динамическая)
+                StreamBuilder<Map<String, int>>(
+                  stream: context.read<FirebaseService>().getPsychologistSessionsCountStream(userId),
+                  builder: (context, sessionsSnapshot) {
+                    final sessionsCount = sessionsSnapshot.data ?? {'total': 0, 'upcoming': 0, 'completed': 0};
+                    return Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildStatCard(
-                              icon: Icons.event,
-                              title: AppLocalizations.of(context)?.translate('total_sessions') ?? 'Всего сессий',
-                              value: _sessionsCount['total'].toString(),
-                              color: Colors.purple,
+                            Text(
+                              AppLocalizations.of(context)?.translate('sessions_statistics') ?? 'Статистика сессий',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                            _buildStatCard(
-                              icon: Icons.event_available,
-                              title: AppLocalizations.of(context)?.translate('upcoming_sessions') ?? 'Предстоящие',
-                              value: _sessionsCount['upcoming'].toString(),
-                              color: Colors.blue,
-                            ),
-                            _buildStatCard(
-                              icon: Icons.check_circle,
-                              title: AppLocalizations.of(context)?.translate('completed_sessions_count') ?? 'Завершённые',
-                              value: _sessionsCount['completed'].toString(),
-                              color: Colors.green,
+                            const SizedBox(height: 16),
+                            Column(
+                              children: [
+                                _buildStatCard(
+                                  icon: Icons.event,
+                                  title: AppLocalizations.of(context)?.translate('total_sessions') ?? 'Всего сессий',
+                                  value: sessionsCount['total'].toString(),
+                                  color: Colors.purple,
+                                ),
+                                const SizedBox(height: 12),
+                                _buildStatCard(
+                                  icon: Icons.event_available,
+                                  title: AppLocalizations.of(context)?.translate('upcoming_sessions') ?? 'Предстоящие',
+                                  value: sessionsCount['upcoming'].toString(),
+                                  color: Colors.blue,
+                                ),
+                                const SizedBox(height: 12),
+                                _buildStatCard(
+                                  icon: Icons.check_circle,
+                                  title: AppLocalizations.of(context)?.translate('completed_sessions_count') ?? 'Завершённые',
+                                  value: sessionsCount['completed'].toString(),
+                                  color: Colors.green,
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  },
                 ),
                 
                 const SizedBox(height: 16),
@@ -218,7 +216,12 @@ class _ProfilePsychologistScreenState extends State<ProfilePsychologistScreen> {
                         title: Text(AppLocalizations.of(context)?.translate('schedule_management') ?? 'Управление расписанием'),
                         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                         onTap: () {
-                          _showScheduleInfoDialog(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ScheduleScreen(),
+                            ),
+                          );
                         },
                       ),
                       ListTile(
@@ -268,7 +271,13 @@ class _ProfilePsychologistScreenState extends State<ProfilePsychologistScreen> {
           children: [
             const Icon(Icons.logout, color: Colors.red),
             const SizedBox(width: 8),
-            Text(localizations.translate('logout_title')),
+            Expanded(
+              child: Text(
+                localizations.translate('logout_title'),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
         content: Text(localizations.translate('logout_confirm')),
@@ -323,53 +332,38 @@ class _ProfilePsychologistScreenState extends State<ProfilePsychologistScreen> {
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.all(12),
-      width: 150,
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
           Icon(icon, color: color, size: 30),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: color,
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontSize: 14, color: Colors.grey),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showScheduleInfoDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Row(
-          children: [
-            Icon(Icons.schedule, color: Theme.of(context).primaryColor),
-            const SizedBox(width: 8),
-            const Text('Управление расписанием'),
-          ],
-        ),
-        content: const Text('Перейдите на вкладку "Запись" для управления своим расписанием.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Закрыть'),
           ),
         ],
       ),
@@ -387,7 +381,13 @@ class _ProfilePsychologistScreenState extends State<ProfilePsychologistScreen> {
           children: [
             Icon(Icons.people, color: Theme.of(context).primaryColor),
             const SizedBox(width: 8),
-            const Text('Мои клиенты'),
+            const Expanded(
+              child: Text(
+                'Мои клиенты',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
         content: const Text('Функционал просмотра клиентов будет реализован в следующей версии.'),

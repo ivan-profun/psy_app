@@ -822,8 +822,22 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: SizedBox(
                               width: double.infinity,
                               child: ElevatedButton.icon(
-                                onPressed: () {
-                                  _showBookingDialog(context, slot);
+                                onPressed: () async {
+                                  final role = await context.read<FirebaseService>().getUserRole();
+                                  if (role == 'psychologist' || role == 'admin') {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Психолог не может записаться на сессию'),
+                                          backgroundColor: Colors.orange,
+                                        ),
+                                      );
+                                    }
+                                    return;
+                                  }
+                                  if (context.mounted) {
+                                    _showBookingDialog(context, slot);
+                                  }
                                 },
                               icon: const Icon(Icons.event_available),
                               label: Text(AppLocalizations.of(context)?.book ?? 'Записаться'),
@@ -861,7 +875,13 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Icon(Icons.calendar_today, color: Theme.of(context).primaryColor),
             const SizedBox(width: 8),
-            Text(localizations.bookAppointment),
+            Expanded(
+              child: Text(
+                localizations.bookAppointment,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
         content: Column(

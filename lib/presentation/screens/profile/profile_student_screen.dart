@@ -14,21 +14,6 @@ class ProfileStudentScreen extends StatefulWidget {
 }
 
 class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
-  int _completedSessions = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadCompletedSessions();
-  }
-
-  Future<void> _loadCompletedSessions() async {
-    final userId = context.read<FirebaseService>().currentUser?.uid;
-    if (userId != null) {
-      final count = await context.read<FirebaseService>().getCompletedSessionsCount(userId);
-      setState(() => _completedSessions = count);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,30 +83,39 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
                 
                 const SizedBox(height: 16),
                 
-                // Статистика
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          AppLocalizations.of(context)?.translate('statistics') ?? 'Статистика',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                // Статистика (динамическая)
+                StreamBuilder<int>(
+                  stream: context.read<FirebaseService>().currentUser?.uid != null
+                      ? context.read<FirebaseService>().getCompletedSessionsCountStream(
+                          context.read<FirebaseService>().currentUser!.uid)
+                      : Stream.value(0),
+                  builder: (context, snapshot) {
+                    final completedSessions = snapshot.data ?? 0;
+                    return Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              AppLocalizations.of(context)?.translate('statistics') ?? 'Статистика',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            _buildStatCard(
+                              icon: Icons.event_available,
+                              title: AppLocalizations.of(context)?.translate('completed_sessions') ?? 'Посещенных сессий',
+                              value: completedSessions.toString(),
+                              color: Colors.green,
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 16),
-                        _buildStatCard(
-                          icon: Icons.event_available,
-                          title: AppLocalizations.of(context)?.translate('completed_sessions') ?? 'Посещенных сессий',
-                          value: _completedSessions.toString(),
-                          color: Colors.green,
-                        ),
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  },
                 ),
                 
                 const SizedBox(height: 16),
@@ -239,7 +233,13 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
           children: [
             const Icon(Icons.logout, color: Colors.red),
             const SizedBox(width: 8),
-            Text(localizations.translate('logout_title')),
+            Expanded(
+              child: Text(
+                localizations.translate('logout_title'),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
         content: Text(localizations.translate('logout_confirm')),

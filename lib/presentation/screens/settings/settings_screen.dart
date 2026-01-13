@@ -248,7 +248,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             Icon(Icons.brightness_6, color: Theme.of(context).colorScheme.primary),
             const SizedBox(width: 8),
-            Text(localizations.translate('select_theme')),
+            Expanded(
+              child: Text(
+                localizations.translate('select_theme'),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
         content: Column(
@@ -304,7 +310,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             Icon(Icons.text_fields, color: Theme.of(context).colorScheme.primary),
             const SizedBox(width: 8),
-            Text(localizations.fontSize),
+            Expanded(
+              child: Text(
+                localizations.fontSize,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
         content: Column(
@@ -360,7 +372,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             Icon(Icons.language, color: Theme.of(context).colorScheme.primary),
             const SizedBox(width: 8),
-            Text(localizations.translate('select_language')),
+            Expanded(
+              child: Text(
+                localizations.translate('select_language'),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
         content: SingleChildScrollView(

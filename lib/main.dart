@@ -66,13 +66,19 @@ class MyApp extends StatelessWidget {
               Locale('cu'),
             ],
             builder: (context, child) {
+              // Fallback для неподдерживаемых локалей
+              Locale effectiveLocale = Locale(settings.language);
+              if (!['ru', 'en'].contains(settings.language)) {
+                effectiveLocale = const Locale('en', 'US'); // Fallback на английский
+              }
+              
               return MediaQuery(
                 data: MediaQuery.of(context).copyWith(
                   textScaleFactor: settings.textScaleFactor,
                 ),
                 child: Localizations.override(
                   context: context,
-                  locale: Locale(settings.language),
+                  locale: effectiveLocale,
                   child: child!,
                 ),
               );
