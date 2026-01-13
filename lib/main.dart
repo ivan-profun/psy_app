@@ -28,6 +28,15 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  Locale _materialLocaleFor(String lang) {
+    switch (lang) {
+      case 'ru':
+        return const Locale('ru', 'RU');
+      default:
+        return const Locale('en', 'US');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -41,15 +50,20 @@ class MyApp extends StatelessWidget {
       ],
       child: Consumer<SettingsProvider>(
         builder: (context, settings, _) {
+          final forced = ['ru', 'en', 'uz', 'tg', 'qya', 'os', 'uk', 'sah', 'cu'].contains(settings.language)
+              ? Locale(settings.language)
+              : const Locale('ru', 'RU');
+          AppLocalizations.forcedLocale = forced;
+
           return MaterialApp(
             navigatorKey: navigatorKey,
             title: 'Психологическая помощь',
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: settings.themeMode,
-            locale: Locale(settings.language),
-            localizationsDelegates: const [
-              AppLocalizations.delegate,
+            locale: _materialLocaleFor(settings.language),
+            localizationsDelegates: [
+              AppLocalizations.delegateFor(forced),
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
@@ -59,28 +73,18 @@ class MyApp extends StatelessWidget {
               Locale('en', 'US'),
               Locale('uz', 'UZ'),
               Locale('tg', 'TJ'),
-              Locale('el'),
+              Locale('qya'),
               Locale('os'),
               Locale('uk', 'UA'),
               Locale('sah'),
               Locale('cu'),
             ],
             builder: (context, child) {
-              // Fallback для неподдерживаемых локалей
-              Locale effectiveLocale = Locale(settings.language);
-              if (!['ru', 'en'].contains(settings.language)) {
-                effectiveLocale = const Locale('en', 'US'); // Fallback на английский
-              }
-              
               return MediaQuery(
                 data: MediaQuery.of(context).copyWith(
                   textScaleFactor: settings.textScaleFactor,
                 ),
-                child: Localizations.override(
-                  context: context,
-                  locale: effectiveLocale,
-                  child: child!,
-                ),
+                child: child!,
               );
             },
             home: const AuthWrapper(),

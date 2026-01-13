@@ -232,6 +232,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return localizations.russian;
       case 'en':
         return localizations.english;
+      case 'uz':
+        return localizations.uzbek;
+      case 'tg':
+        return localizations.tajik;
+      case 'qya':
+        return localizations.elvish;
+      case 'os':
+        return localizations.ossetian;
+      case 'uk':
+        return localizations.ukrainian;
+      case 'sah':
+        return localizations.yakut;
+      case 'cu':
+        return localizations.oldChurchSlavonic;
       default:
         return localizations.russian;
     }
@@ -463,7 +477,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               RadioListTile<String>(
                 title: const Text('Quenya (Elvish)'),
-                value: 'el',
+                value: 'qya',
                 groupValue: settings.language,
                 onChanged: (value) async {
                   if (value != null && value != settings.language) {

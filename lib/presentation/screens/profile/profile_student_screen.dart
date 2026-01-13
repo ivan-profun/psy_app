@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../../core/services/firebase_service.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../data/models/user_model.dart';
+import '../../../data/models/appointment_model.dart';
+import 'package:intl/intl.dart';
 import '../settings/settings_screen.dart';
 import '../../widgets/avatar_picker.dart';
 
@@ -118,6 +120,91 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
                   },
                 ),
                 
+                const SizedBox(height: 16),
+
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppLocalizations.of(context)?.translate('my_appointments') ?? 'Мои записи',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        StreamBuilder<List<AppointmentModel>>(
+                          stream: context.read<FirebaseService>().getUserAppointmentsStream(),
+                          builder: (context, appointmentsSnapshot) {
+                            if (appointmentsSnapshot.connectionState == ConnectionState.waiting) {
+                              return const Center(child: CircularProgressIndicator());
+                            }
+
+                            if (appointmentsSnapshot.hasError) {
+                              return Text(
+                                '${AppLocalizations.of(context)?.error ?? 'Ошибка'}: ${appointmentsSnapshot.error}',
+                              );
+                            }
+
+                            final appointments = appointmentsSnapshot.data ?? [];
+                            if (appointments.isEmpty) {
+                              return Text(AppLocalizations.of(context)?.translate('no_appointments') ?? 'Нет записей');
+                            }
+
+                            return ListView.separated(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: appointments.length,
+                              separatorBuilder: (_, __) => const Divider(height: 16),
+                              itemBuilder: (context, index) {
+                                final appt = appointments[index];
+                                return Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Icon(Icons.event_available, size: 20),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            DateFormat('dd.MM.yyyy HH:mm').format(appt.datetime),
+                                            style: const TextStyle(fontWeight: FontWeight.w600),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            '${AppLocalizations.of(context)?.translate('psychologist') ?? 'Психолог'}: ${appt.psychologistId}',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            '${AppLocalizations.of(context)?.translate('status') ?? 'Статус'}: ${appt.status}',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
                 const SizedBox(height: 16),
                 
                 // Настройки приложения

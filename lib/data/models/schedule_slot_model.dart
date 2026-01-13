@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class ScheduleSlot {
   final String id;
   final String psychologistId;
+  final String psychologistName;
   final DateTime datetime;
   final bool isAvailable;
   final String? studentId;
@@ -11,6 +12,7 @@ class ScheduleSlot {
   ScheduleSlot({
     required this.id,
     required this.psychologistId,
+    this.psychologistName = '',
     required this.datetime,
     this.isAvailable = true,
     this.studentId,
@@ -21,6 +23,7 @@ class ScheduleSlot {
     return ScheduleSlot(
       id: id,
       psychologistId: data['psychologistId'] ?? '',
+      psychologistName: data['psychologistName'] ?? '',
       datetime: (data['datetime'] as Timestamp?)?.toDate() ?? 
                 (data['dateTime'] as Timestamp?)?.toDate() ?? 
                 DateTime.now(),
@@ -33,6 +36,7 @@ class ScheduleSlot {
   Map<String, dynamic> toFirestore() {
     return {
       'psychologistId': psychologistId,
+      'psychologistName': psychologistName,
       'datetime': Timestamp.fromDate(datetime),
       'isAvailable': isAvailable,
       'studentId': studentId,

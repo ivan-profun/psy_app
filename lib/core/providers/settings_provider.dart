@@ -49,7 +49,10 @@ class SettingsProvider extends ChangeNotifier {
       );
     }
 
-    _language = prefs.getString('language') ?? 'ru';
+    final storedLang = prefs.getString('language') ?? 'ru';
+    _language = ['ru', 'en', 'uz', 'tg', 'qya', 'os', 'uk', 'sah', 'cu'].contains(storedLang)
+        ? storedLang
+        : 'ru';
     
     _pushNotifications = prefs.getBool('push_notifications') ?? true;
     _emailNotifications = prefs.getBool('email_notifications') ?? false;

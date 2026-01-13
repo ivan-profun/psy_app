@@ -948,9 +948,7 @@ class _HomeScreenState extends State<HomeScreen> {
               
               try {
                 await firebaseService.bookAppointment(slot);
-                
                 if (context.mounted) {
-                  Navigator.pop(context); // Закрываем индикатор
                   final loc = AppLocalizations.of(context) ?? AppLocalizations(const Locale('ru'));
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -971,7 +969,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 }
               } catch (e) {
                 if (context.mounted) {
-                  Navigator.pop(context); // Закрываем индикатор
                   final loc = AppLocalizations.of(context) ?? AppLocalizations(const Locale('ru'));
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -994,6 +991,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       duration: const Duration(seconds: 4),
                     ),
                   );
+                }
+              } finally {
+                if (context.mounted) {
+                  final nav = Navigator.of(context, rootNavigator: true);
+                  if (nav.canPop()) {
+                    nav.pop();
+                  }
                 }
               }
             },

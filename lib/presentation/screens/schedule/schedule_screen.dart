@@ -20,6 +20,104 @@ class ScheduleScreen extends StatelessWidget {
          (user.displayName?.toLowerCase().contains('psych') ?? false));
   }
 
+  void _showStudentAppointmentsDialog(BuildContext context) {
+    final firebaseService = context.read<FirebaseService>();
+    final localizations = AppLocalizations.of(context) ?? AppLocalizations(const Locale('ru'));
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Container(
+          width: double.maxFinite,
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.8,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Icon(Icons.event_note, color: Theme.of(context).primaryColor),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        localizations.translate('my_appointments') ?? 'Мои записи',
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              Flexible(
+                child: StreamBuilder<List<AppointmentModel>>(
+                  stream: firebaseService.getUserAppointmentsStream(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Text('${localizations.error}: ${snapshot.error}'),
+                        ),
+                      );
+                    }
+
+                    final appointments = snapshot.data ?? [];
+                    if (appointments.isEmpty) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Text(localizations.translate('no_appointments') ?? 'Нет записей'),
+                        ),
+                      );
+                    }
+
+                    return ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: appointments.length,
+                      itemBuilder: (context, index) {
+                        final appointment = appointments[index];
+                        return FutureBuilder<UserModel>(
+                          future: firebaseService.getUserData(appointment.psychologistId),
+                          builder: (context, userSnapshot) {
+                            final psychologistName = userSnapshot.data?.name ?? (localizations.translate('psychologist') ?? 'Психолог');
+                            return Card(
+                              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                              child: ListTile(
+                                leading: const Icon(Icons.event_available),
+                                title: Text(psychologistName),
+                                subtitle: Text(
+                                  DateFormat('dd.MM.yyyy HH:mm').format(appointment.datetime),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final firebaseService = context.watch<FirebaseService>();
@@ -44,6 +142,15 @@ class ScheduleScreen extends StatelessWidget {
                   ? localizations.translate('my_schedule') ?? 'Моё расписание'
                   : localizations.bookAppointment,
             ),
+            actions: [
+              if (!isPsychologist)
+                IconButton(
+                  icon: const Icon(Icons.event_note),
+                  onPressed: () {
+                    _showStudentAppointmentsDialog(context);
+                  },
+                ),
+            ],
           ),
           body: isPsychologist
               ? _buildPsychologistSchedule(context)
@@ -252,6 +359,7 @@ class ScheduleScreen extends StatelessWidget {
                           );
                         }
                         if (userSnapshot.hasData) {
+                          final name = userSnapshot.data!.name.trim();
                           return Row(
                             children: [
                               Icon(
@@ -261,7 +369,7 @@ class ScheduleScreen extends StatelessWidget {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                'Психолог: ${userSnapshot.data!.name}',
+                                'Психолог: ${name.isNotEmpty ? name : (AppLocalizations.of(context)?.translate('psychologist') ?? 'Психолог')}',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w600,
                                   color: theme.colorScheme.onSurface,
@@ -270,19 +378,25 @@ class ScheduleScreen extends StatelessWidget {
                             ],
                           );
                         }
+                        final hasId = slot.psychologistId.trim().isNotEmpty;
                         return Row(
                           children: [
                             Icon(
-                              Icons.error_outline,
+                              Icons.info_outline,
                               size: 18,
-                              color: Colors.red,
+                              color: theme.colorScheme.onSurface.withOpacity(0.6),
                             ),
                             const SizedBox(width: 8),
-                            Text(
-                              'Информация недоступна',
-                              style: TextStyle(
-                                color: Colors.red,
-                                fontSize: 12,
+                            Expanded(
+                              child: Text(
+                                hasId
+                                    ? 'Психолог: (не удалось загрузить)'
+                                    : 'Психолог не указан',
+                                style: TextStyle(
+                                  color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                  fontSize: 12,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
@@ -523,7 +637,6 @@ class ScheduleScreen extends StatelessWidget {
                 await firebaseService.bookAppointment(slot);
                 
                 if (context.mounted) {
-                  Navigator.pop(context); // Закрываем индикатор
                   final loc = AppLocalizations.of(context) ?? AppLocalizations(const Locale('ru'));
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -544,7 +657,6 @@ class ScheduleScreen extends StatelessWidget {
                 }
               } catch (e) {
                 if (context.mounted) {
-                  Navigator.pop(context); // Закрываем индикатор
                   final loc = AppLocalizations.of(context) ?? AppLocalizations(const Locale('ru'));
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -567,6 +679,13 @@ class ScheduleScreen extends StatelessWidget {
                       duration: const Duration(seconds: 4),
                     ),
                   );
+                }
+              } finally {
+                if (context.mounted) {
+                  final nav = Navigator.of(context, rootNavigator: true);
+                  if (nav.canPop()) {
+                    nav.pop();
+                  }
                 }
               }
             },
