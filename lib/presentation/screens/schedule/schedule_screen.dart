@@ -1,4 +1,3 @@
-// lib/presentation/screens/schedule/schedule_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -11,7 +10,6 @@ import '../../../data/models/user_model.dart';
 class ScheduleScreen extends StatelessWidget {
   const ScheduleScreen({super.key});
 
-  // Метод для определения, является ли пользователь психологом
   bool _isPsychologist(BuildContext context) {
     final user = context.watch<FirebaseService>().currentUser;
     return user != null && 
@@ -160,7 +158,6 @@ class ScheduleScreen extends StatelessWidget {
     );
   }
 
-  // ========== ДЛЯ СТУДЕНТА ==========
   Widget _buildStudentSchedule(BuildContext context) {
     final firebaseService = context.read<FirebaseService>();
 
@@ -444,7 +441,6 @@ class ScheduleScreen extends StatelessWidget {
     );
   }
 
-  // ========== ДЛЯ ПСИХОЛОГА ==========
   Widget _buildPsychologistSchedule(BuildContext context) {
     final user = context.watch<FirebaseService>().currentUser;
     
@@ -546,7 +542,6 @@ class ScheduleScreen extends StatelessWidget {
     );
   }
 
-  // ========== ОБЩИЕ МЕТОДЫ ==========
   void _showBookingDialog(BuildContext context, ScheduleSlot slot) async {
     final firebaseService = context.read<FirebaseService>();
     final localizations = AppLocalizations.of(context) ?? AppLocalizations(const Locale('ru'));
@@ -624,7 +619,6 @@ class ScheduleScreen extends StatelessWidget {
             onPressed: () async {
               Navigator.pop(context);
               
-              // Показываем индикатор загрузки
               showDialog(
                 context: context,
                 barrierDismissible: false,
@@ -1322,7 +1316,7 @@ class ScheduleScreen extends StatelessWidget {
                                   onSelected: (value) async {
                                     try {
                                       if (value == 'edit') {
-                                        Navigator.pop(context); // Закрываем текущий диалог
+                                        Navigator.pop(context);
                                         _showEditAppointmentDialog(context, appointment, psychologistId);
                                       } else if (value == 'complete') {
                                         await firebaseService.updateAppointmentStatus(appointment.id, 'completed');
