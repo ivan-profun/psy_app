@@ -40,7 +40,6 @@ class ArticleDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Заголовок
             Text(
               article.title,
               style: const TextStyle(
@@ -50,7 +49,6 @@ class ArticleDetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             
-            // Информация о статье
             Row(
               children: [
                 const Icon(Icons.calendar_today, size: 16),
@@ -88,10 +86,8 @@ class ArticleDetailScreen extends StatelessWidget {
               ),
             ],
             
-            // Разделитель
             const Divider(height: 32),
-            
-            // Содержание статьи
+
             Text(
               article.content,
               style: const TextStyle(
@@ -100,8 +96,7 @@ class ArticleDetailScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            
-            // Кнопка возврата
+
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
