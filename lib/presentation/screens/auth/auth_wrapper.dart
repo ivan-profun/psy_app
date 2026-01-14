@@ -18,11 +18,9 @@ class AuthWrapper extends StatelessWidget {
         }
 
         if (snapshot.hasData && snapshot.data != null) {
-          // Пользователь вошел, показываем главный экран с навигацией
           return const MainScreen();
         }
 
-        // Пользователь не вошел, показываем экран входа
         return const LoginScreen();
       },
     );
