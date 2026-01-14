@@ -37,7 +37,6 @@ class _ProfilePsychologistScreenState extends State<ProfilePsychologistScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Информация о психологе
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -90,7 +89,6 @@ class _ProfilePsychologistScreenState extends State<ProfilePsychologistScreen> {
                 
                 const SizedBox(height: 16),
                 
-                // Статистика статей (динамическая)
                 StreamBuilder<Map<String, int>>(
                   stream: context.read<FirebaseService>().getPsychologistArticlesCountStream(userId),
                   builder: (context, articlesSnapshot) {
@@ -142,7 +140,6 @@ class _ProfilePsychologistScreenState extends State<ProfilePsychologistScreen> {
                 
                 const SizedBox(height: 16),
                 
-                // Статистика сессий (динамическая)
                 StreamBuilder<Map<String, int>>(
                   stream: context.read<FirebaseService>().getPsychologistSessionsCountStream(userId),
                   builder: (context, sessionsSnapshot) {
@@ -194,7 +191,6 @@ class _ProfilePsychologistScreenState extends State<ProfilePsychologistScreen> {
                 
                 const SizedBox(height: 16),
                 
-                // Быстрые действия
                 Card(
                   child: Column(
                     children: [
@@ -238,7 +234,6 @@ class _ProfilePsychologistScreenState extends State<ProfilePsychologistScreen> {
                 
                 const SizedBox(height: 16),
                 
-                // Выход
                 Card(
                   child: ListTile(
                     leading: Icon(Icons.logout, color: Colors.red),
