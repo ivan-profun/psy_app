@@ -75,14 +75,13 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   Future<void> setLanguage(String lang) async {
-    if (_language == lang) return; // Не меняем, если язык тот же
+    if (_language == lang) return;
     
     _language = lang;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('language', lang);
     notifyListeners();
-    
-    // Небольшая задержка для плавного перехода
+
     await Future.delayed(const Duration(milliseconds: 100));
   }
 
