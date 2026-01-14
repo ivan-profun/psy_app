@@ -28,7 +28,6 @@ class _LoginScreenState extends State<LoginScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
-      // После успешного входа AuthWrapper перенаправит на HomeScreen
     } on FirebaseAuthException catch (e) {
       setState(() {
         _errorMessage = e.message ?? 'Ошибка входа';
