@@ -36,7 +36,6 @@ class FirebaseService {
                   .map((doc) => ArticleModel.fromFirestore(doc.data(), doc.id))
                   .toList();
               
-              // Сортируем на клиенте
               articles.sort((a, b) => b.createdAt.compareTo(a.createdAt));
               controller.add(articles);
             } catch (e) {
@@ -71,7 +70,6 @@ class FirebaseService {
                   .map((doc) => AppointmentModel.fromFirestore(doc.data(), doc.id))
                   .toList();
               
-              // Сортируем на клиенте
               appointments.sort((a, b) => b.datetime.compareTo(a.datetime));
               controller.add(appointments);
             } catch (e) {
@@ -105,7 +103,6 @@ class FirebaseService {
                   .where((schedule) => schedule.date.isAfter(now) || schedule.date.isAtSameMomentAs(now))
                   .toList();
               
-              // Сортируем на клиенте
               schedules.sort((a, b) => a.date.compareTo(b.date));
               controller.add(schedules);
             } catch (e) {
@@ -141,7 +138,6 @@ class FirebaseService {
       'createdAt': FieldValue.serverTimestamp(),
     });
 
-    // Обновляем расписание
     await _firestore
         .collection('schedule')
         .doc(scheduleId)
@@ -162,7 +158,6 @@ class FirebaseService {
                   .map((doc) => NoteModel.fromFirestore(doc.data(), doc.id))
                   .toList();
               
-              // Сортируем на клиенте
               notes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
               controller.add(notes);
             } catch (e) {
