@@ -32,7 +32,6 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Информация о студенте
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -85,7 +84,6 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
                 
                 const SizedBox(height: 16),
                 
-                // Статистика (динамическая)
                 StreamBuilder<int>(
                   stream: context.read<FirebaseService>().currentUser?.uid != null
                       ? context.read<FirebaseService>().getCompletedSessionsCountStream(
@@ -207,7 +205,6 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
 
                 const SizedBox(height: 16),
                 
-                // Настройки приложения
                 Card(
                   child: ListTile(
                     leading: Icon(Icons.settings, color: Theme.of(context).primaryColor),
@@ -226,7 +223,6 @@ class _ProfileStudentScreenState extends State<ProfileStudentScreen> {
                 
                 const SizedBox(height: 16),
                 
-                // Выход
                 Card(
                   child: ListTile(
                     leading: Icon(Icons.logout, color: Colors.red),
