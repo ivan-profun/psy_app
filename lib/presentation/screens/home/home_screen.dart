@@ -28,7 +28,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _checkPermissions() async {
     try {
-      // Проверяем, авторизован ли пользователь
       final user = await Provider.of<FirebaseService>(context, listen: false).currentUser;
       if (user == null) {
         setState(() {
@@ -84,16 +83,12 @@ class _HomeScreenState extends State<HomeScreen> {
     return SingleChildScrollView(
       child: Column(
         children: [
-          // Заголовок и приветствие
           _buildHeader(context),
           
-          // Информация о службе
           _buildServiceInfo(),
           
-          // Свежие статьи
           _buildLatestArticles(context),
           
-          // Ближайшие свободные слоты
           _buildAvailableSlots(context),
           
           const SizedBox(height: 20),
@@ -107,7 +102,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final theme = Theme.of(context);
     final localizations = AppLocalizations.of(context) ?? AppLocalizations(const Locale('ru'));
     
-    // Безопасное извлечение имени пользователя
     String getUserName() {
       if (user == null) return localizations.translate('guest') ?? 'Гость';
       
@@ -429,10 +423,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               }
 
-              // Берем только 3 последние статьи
               final latestArticles = articles.take(3).toList();
 
-              // Используем PageView для SwipeView
               return SizedBox(
                 height: 280,
                 child: PageView.builder(
@@ -937,7 +929,6 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () async {
               Navigator.pop(context);
               
-              // Показываем индикатор загрузки
               showDialog(
                 context: context,
                 barrierDismissible: false,
