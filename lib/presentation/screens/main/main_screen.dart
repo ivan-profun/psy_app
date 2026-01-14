@@ -17,18 +17,17 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
-  // Разные экраны для разных ролей
   final List<Widget> _studentScreens = [
     const HomeScreen(),
     const ArticlesListScreen(),
-    const ScheduleScreen(), // Убрали параметр
+    const ScheduleScreen(),
     const ProfileScreen(),
   ];
 
   final List<Widget> _psychologistScreens = [
     const HomeScreen(),
     const ArticlesListScreen(showCreateButton: true),
-    const ScheduleScreen(), // Убрали параметр
+    const ScheduleScreen(),
     const ProfileScreen(),
   ];
 
@@ -37,7 +36,6 @@ class _MainScreenState extends State<MainScreen> {
     final user = context.watch<FirebaseService>().currentUser;
     final firebaseService = context.watch<FirebaseService>();
     
-    // Используем FutureBuilder для получения роли
     return FutureBuilder<String>(
       future: firebaseService.getUserRole(),
       builder: (context, snapshot) {
