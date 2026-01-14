@@ -31,7 +31,6 @@ class _ProfileAdminScreenState extends State<ProfileAdminScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Информация об админе
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -84,7 +83,6 @@ class _ProfileAdminScreenState extends State<ProfileAdminScreen> {
                 
                 const SizedBox(height: 16),
                 
-                // Статистика системы (динамическая)
                 StreamBuilder<Map<String, int>>(
                   stream: context.read<FirebaseService>().getSystemStatisticsStream(),
                   builder: (context, snapshot) {
@@ -152,7 +150,6 @@ class _ProfileAdminScreenState extends State<ProfileAdminScreen> {
                 
                 const SizedBox(height: 16),
                 
-                // Управление пользователями
                 Card(
                   child: Column(
                     children: [
@@ -211,7 +208,6 @@ class _ProfileAdminScreenState extends State<ProfileAdminScreen> {
                 
                 const SizedBox(height: 16),
                 
-                // Выход
                 Card(
                   child: ListTile(
                     leading: Icon(Icons.logout, color: Colors.red),
