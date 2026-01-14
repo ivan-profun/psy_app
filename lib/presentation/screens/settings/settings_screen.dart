@@ -25,7 +25,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Внешний вид
           _buildSectionHeader(context, Icons.palette, localizations.theme),
           const SizedBox(height: 8),
           Card(
@@ -52,7 +51,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           
           const SizedBox(height: 24),
           
-          // Язык и регион
           _buildSectionHeader(context, Icons.language, localizations.language),
           const SizedBox(height: 8),
           Card(
@@ -67,7 +65,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           
           const SizedBox(height: 24),
           
-          // Уведомления
           _buildSectionHeader(context, Icons.notifications, localizations.notifications),
           const SizedBox(height: 8),
           Card(
@@ -98,7 +95,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           
           const SizedBox(height: 24),
           
-          // Конфиденциальность
           _buildSectionHeader(context, Icons.security, localizations.privacy),
           const SizedBox(height: 8),
           Card(
@@ -137,7 +133,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           
           const SizedBox(height: 24),
           
-          // О приложении
           _buildSectionHeader(context, Icons.info, localizations.about),
           const SizedBox(height: 8),
           Card(
