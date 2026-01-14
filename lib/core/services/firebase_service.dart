@@ -12,20 +12,16 @@ class FirebaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Получение текущего пользователя
   User? get currentUser => _auth.currentUser;
   
-  // Получение потока изменений состояния аутентификации
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
-  // ========== USERS ==========
   Future<UserModel> getUserData(String userId) async {
     final doc = await _firestore.collection('users').doc(userId).get();
     if (!doc.exists) throw Exception('Пользователь не найден');
     return UserModel.fromFirestore(doc.data()!, doc.id);
   }
 
-  // ========== ARTICLES ==========
   Stream<List<ArticleModel>> getArticlesStream() {
     final controller = StreamController<List<ArticleModel>>();
     
@@ -57,8 +53,7 @@ class FirebaseService {
     controller.onCancel = () {};
     return controller.stream;
   }
-
-  // ========== APPOINTMENTS ==========
+  
   Stream<List<AppointmentModel>> getUserAppointmentsStream() {
     final userId = _auth.currentUser?.uid;
     if (userId == null) return Stream.value([]);
@@ -94,7 +89,6 @@ class FirebaseService {
     return controller.stream;
   }
 
-  // ========== SCHEDULES ==========
   Stream<List<ScheduleModel>> getAvailableSchedulesStream() {
     final controller = StreamController<List<ScheduleModel>>();
     
@@ -154,7 +148,6 @@ class FirebaseService {
         .update({'isAvailable': false});
   }
 
-  // ========== NOTES ==========
   Stream<List<NoteModel>> getNotesByAppointmentId(String appointmentId) {
     final controller = StreamController<List<NoteModel>>();
     
@@ -232,7 +225,6 @@ class FirebaseService {
     await _firestore.collection('schedule').doc(slotId).update(updateData);
   }
 
-  // ========== AUTH ==========
   Future<UserCredential> signIn(String email, String password) async {
     return await _auth.signInWithEmailAndPassword(
       email: email,
@@ -251,7 +243,6 @@ class FirebaseService {
       password: password,
     );
 
-    // Создаем документ пользователя в Firestore
     await _firestore.collection('users').doc(credential.user!.uid).set({
       'email': email,
       'name': name,
@@ -266,7 +257,6 @@ class FirebaseService {
     await _auth.signOut();
   }
 
-  // Обновить аватарку пользователя
   Future<void> updateUserAvatar(String base64Avatar) async {
     final userId = _auth.currentUser?.uid;
     if (userId == null) throw Exception('Пользователь не авторизован');
@@ -277,7 +267,6 @@ class FirebaseService {
     });
   }
 
-  // Получить аватарку пользователя
   Future<String?> getUserAvatar(String userId) async {
     final doc = await _firestore.collection('users').doc(userId).get();
     if (!doc.exists) return null;
@@ -298,7 +287,6 @@ class FirebaseService {
                   .map((doc) {
                     try {
                       final data = doc.data();
-                      // Проверяем наличие необходимых полей (datetime или dateTime)
                       if (data['datetime'] == null && data['dateTime'] == null) {
                         return null;
                       }
@@ -312,7 +300,6 @@ class FirebaseService {
                   .cast<ScheduleSlot>()
                   .toList();
               
-              // Сортируем и ограничиваем
               slots.sort((a, b) => a.datetime.compareTo(b.datetime));
               controller.add(slots.take(limit).toList());
             } catch (e) {
@@ -333,7 +320,6 @@ class FirebaseService {
     return controller.stream;
   }
 
-  // Получить слоты психолога
   Stream<List<ScheduleSlot>> getPsychologistSlotsStream(String psychologistId) {
     final controller = StreamController<List<ScheduleSlot>>();
     
@@ -361,7 +347,6 @@ class FirebaseService {
                   .cast<ScheduleSlot>()
                   .toList();
               
-              // Сортируем на клиенте
               slots.sort((a, b) => a.datetime.compareTo(b.datetime));
               controller.add(slots);
             } catch (e) {
@@ -379,7 +364,6 @@ class FirebaseService {
     return controller.stream;
   }
 
-  // Получить записи психолога
   Stream<List<AppointmentModel>> getPsychologistAppointmentsStream(String psychologistId) {
     final controller = StreamController<List<AppointmentModel>>();
     
@@ -394,7 +378,6 @@ class FirebaseService {
                   .map((doc) => AppointmentModel.fromFirestore(doc.data(), doc.id))
                   .toList();
               
-              // Сортируем на клиенте
               appointments.sort((a, b) => b.datetime.compareTo(a.datetime));
               controller.add(appointments);
             } catch (e) {
@@ -412,7 +395,6 @@ class FirebaseService {
     return controller.stream;
   }
 
-  // Добавить слот для психолога
   Future<void> addScheduleSlot({
     required String psychologistId,
     required DateTime datetime,
@@ -425,19 +407,16 @@ class FirebaseService {
     });
   }
 
-  // Удалить слот
   Future<void> deleteScheduleSlot(String slotId) async {
     await _firestore.collection('schedule').doc(slotId).delete();
   }
 
-  // Обновить статус записи
   Future<void> updateAppointmentStatus(String appointmentId, String status) async {
     await _firestore.collection('appointments').doc(appointmentId).update({
       'status': status,
     });
   }
 
-  // Создать запись (для психолога)
   Future<void> createAppointmentForPsychologist({
     required String psychologistId,
     required String studentId,
@@ -453,8 +432,7 @@ class FirebaseService {
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
-
-  // Обновить запись (для психолога)
+  
   Future<void> updateAppointment({
     required String appointmentId,
     String? studentId,
@@ -471,12 +449,10 @@ class FirebaseService {
     await _firestore.collection('appointments').doc(appointmentId).update(updateData);
   }
 
-  // Удалить запись (для психолога)
   Future<void> deleteAppointment(String appointmentId) async {
     await _firestore.collection('appointments').doc(appointmentId).delete();
   }
 
-  // Запись на сессию
   Future<void> bookAppointment(ScheduleSlot slot) async {
     final userId = _auth.currentUser?.uid;
     if (userId == null) throw Exception('Пользователь не авторизован');
@@ -486,13 +462,11 @@ class FirebaseService {
       throw Exception('Психолог не может записаться на сессию');
     }
 
-    // Обновляем слот
     await _firestore.collection('schedule').doc(slot.id).update({
       'isAvailable': false,
       'studentId': userId,
     });
 
-    // Создаем запись в appointments
     await _firestore.collection('appointments').add({
       'studentId': userId,
       'psychologistId': slot.psychologistId,
@@ -502,7 +476,6 @@ class FirebaseService {
     });
   }
 
-  // Получить количество посещенных сессий для студента
   Future<int> getCompletedSessionsCount(String userId) async {
     final snapshot = await _firestore
         .collection('appointments')
@@ -512,7 +485,6 @@ class FirebaseService {
     return snapshot.docs.length;
   }
 
-  // Получить заметки студента
   Stream<List<NoteModel>> getStudentNotesStream(String userId) {
     final controller = StreamController<List<NoteModel>>();
     
@@ -527,7 +499,6 @@ class FirebaseService {
                   .map((doc) => NoteModel.fromFirestore(doc.data(), doc.id))
                   .toList();
               
-              // Сортируем на клиенте
               notes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
               controller.add(notes);
             } catch (e) {
@@ -545,7 +516,6 @@ class FirebaseService {
     return controller.stream;
   }
 
-  // Для психолога: получить количество статей (динамически)
   Stream<Map<String, int>> getPsychologistArticlesCountStream(String psychologistId) {
     return _firestore
         .collection('articles')
@@ -568,7 +538,6 @@ class FirebaseService {
         });
   }
 
-  // Для психолога: получить количество сессий (динамически)
   Stream<Map<String, int>> getPsychologistSessionsCountStream(String psychologistId) {
     return _firestore
         .collection('appointments')
@@ -598,7 +567,6 @@ class FirebaseService {
         });
   }
 
-  // Для студента: получить количество завершенных сессий (динамически)
   Stream<int> getCompletedSessionsCountStream(String userId) {
     return _firestore
         .collection('appointments')
@@ -612,7 +580,6 @@ class FirebaseService {
         });
   }
 
-  // Для админа: получить статистику системы (динамически)
   Stream<Map<String, int>> getSystemStatisticsStream() {
     final controller = StreamController<Map<String, int>>();
     Map<String, int> currentStats = {'total_users': 0, 'total_articles': 0, 'total_appointments': 0};
@@ -659,7 +626,6 @@ class FirebaseService {
     });
   }
 
-  // Получить всех пользователей (для админа)
   Stream<List<UserModel>> getAllUsersStream() {
     final controller = StreamController<List<UserModel>>();
     
@@ -673,7 +639,6 @@ class FirebaseService {
                   .map((doc) => UserModel.fromFirestore(doc.data(), doc.id))
                   .toList();
               
-              // Сортируем на клиенте
               users.sort((a, b) => b.createdAt.compareTo(a.createdAt));
               controller.add(users);
             } catch (e) {
@@ -691,7 +656,6 @@ class FirebaseService {
     return controller.stream;
   }
 
-  // Получить всех студентов (для психолога)
   Future<List<UserModel>> getStudentsList() async {
     try {
       final snapshot = await _firestore
@@ -711,7 +675,6 @@ class FirebaseService {
     }
   }
 
-  // Обновить роль пользователя (для админа)
   Future<void> updateUserRole(String userId, String role) async {
     await _firestore.collection('users').doc(userId).update({
       'role': role,
@@ -719,7 +682,6 @@ class FirebaseService {
     });
   }
 
-  // Создание/редактирование статьи (для психолога)
   Future<void> saveArticle({
     String? articleId,
     required String title,
@@ -738,16 +700,13 @@ class FirebaseService {
     };
 
     if (articleId == null) {
-      // Создание новой статьи
       articleData['createdAt'] = FieldValue.serverTimestamp();
       await _firestore.collection('articles').add(articleData);
     } else {
-      // Обновление существующей
       await _firestore.collection('articles').doc(articleId).update(articleData);
     }
   }
-
-  // Получить статьи психолога
+  
   Stream<List<ArticleModel>> getPsychologistArticlesStream(String psychologistId) {
     final controller = StreamController<List<ArticleModel>>();
     
@@ -762,7 +721,6 @@ class FirebaseService {
                   .map((doc) => ArticleModel.fromFirestore(doc.data(), doc.id))
                   .toList();
               
-              // Сортируем на клиенте
               articles.sort((a, b) => b.createdAt.compareTo(a.createdAt));
               controller.add(articles);
             } catch (e) {
@@ -780,7 +738,6 @@ class FirebaseService {
     return controller.stream;
   }
 
-  // Получить роль пользователя из Firestore
   Future<String> getUserRole() async {
     final userId = _auth.currentUser?.uid;
     if (userId == null) return 'student';
@@ -797,7 +754,6 @@ class FirebaseService {
     }
   }
 
-  // Stream для отслеживания роли
   Stream<String> getUserRoleStream() {
     final userId = _auth.currentUser?.uid;
     if (userId == null) return Stream.value('student');
@@ -821,7 +777,6 @@ class FirebaseService {
                   .where((article) => article.isPublished)
                   .toList();
               
-              // Сортируем на клиенте
               articles.sort((a, b) => b.createdAt.compareTo(a.createdAt));
               controller.add(articles.take(limit).toList());
             } catch (e) {
